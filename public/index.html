@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Hello</title>
+	<link rel="stylesheet" type="text/css" href="bower_components/angular/angular-csp.css">
+	<link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+</head>
+<body ng-app="TestApp" ng-controller="TestController">
+	<nav class="navbar navbar-default">
+  		<div class="container-fluid">
+    		<div class="navbar-header">
+      		<a class="navbar-brand" href="#">
+        		<img alt="Brand" src="...">
+      		</a>
+        </div>
+      </div>
+  </nav>
+	<div class="container-fluid">
+    <div class="col-md-8">
+      <div>
+        <iframe src="http://player.twitch.tv/?channel=dada5714" id="screen" width="640" height="300" allowfullscreen></iframe>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          Time: {{currentBet.timer}}
+        </div>
+        <div class="col-md-6">
+          <table class="table table-striped">
+            <tr>
+              <th class="">{{players.player1}} 
+                <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet1 = true">Bet</button>
+                <form class="form-inline" ng-show="showBet1" ng-submit="showBet1 = false">
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
+    <div class="input-group">
+      <div class="input-group-addon">$</div>
+      <input type="number" class="form-control" id="exampleInputAmount" placeholder="Amount" required>
+    </div>
+  </div>
+</form>
+              </th>
+            </tr>
+            <tr ng-repeat="better in betters.player1">
+              <td>{{better.name}} (${{better.bet}})</td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <table class="table table-striped">
+            <tr>
+              <th class="align-center">{{players.player2}}
+                <button type="button" class="btn btn-default btn-sm text-right">Bet</button>
+                <form class="form-inline">
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
+    <div class="input-group">
+      <div class="input-group-addon">$</div>
+      <input type="number" class="form-control" id="exampleInputAmount" placeholder="Amount" required>
+    </div>
+  </div>
+</form>
+              </th>
+            </tr>
+            <tr ng-repeat="better in betters.player2">
+              <td>{{better.name}} (${{better.bet}})</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <iframe frameborder="0" scrolling="no" src="http://twitch.tv/dada5714/chat?popout=" height="700" width="325">
+    </div>
+    </iframe>
+	</div>
+</body>
+<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+<script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+	var app = angular.module('TestApp', [])
+	app.controller('TestController', ['$scope', '$interval', function($scope, $interval){
+		$scope.name = "Ronald"
+    $scope.currentBet = {
+      "active":true,
+      "timer":120
+    }
+    $scope.startBetTimer = function(){
+      $interval(function(){
+        $scope.currentBet.timer -= 1;
+      }, 1000)
+    }
+    $scope.betters = {
+      "player1": [
+        {
+          "name":"dada5714",
+          "bet":"30"
+        },
+        {
+          "name":"makeitreyn",
+          "bet":"10"}
+      ],
+      "player2": [
+        {
+          "name":"ionicbearcannon",
+          "bet":"5"
+        },
+        {
+          "name":"loldbz",
+          "bet":"10"
+        }
+      ]
+    }
+    $scope.players = {"player1":"Captain Falcon","player2":"Corrin"}
+    $scope.startBetTimer();
+	}])
+</script>
+<style type="text/css">
+  .navbar {
+    border-radius: 0;
+  }
+</style>
+</html>
