@@ -20,6 +20,9 @@ casionight.com/games/{gamename}
 casinonight.com/streams/{id}
 	betting stream
 
+casinonight.com/portal
+	Betting console for your streamm
+
 	insert into test.matches (players, game_id, remaining_time) values (ARRAY[CAST('{"player": "Captain Falcon", "odds": "1", "total": "0"}' AS json),CAST('{"player": "Corrin", "odds": "1", "total": "0"}' as json)], 1, 120)
 
 	select players[1]->'player' from test.matches
