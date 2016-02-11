@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Casino Night</title>
+	<link rel="stylesheet" type="text/css" href="bower_components/angular/angular-csp.css">
+	<link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+</head>
+<body ng-app="TestApp" ng-controller="TestController">
+	<nav class="navbar navbar-default">
+  		<div class="container-fluid">
+    		<div class="navbar-header">
+      		<a class="navbar-brand" href="#">
+        		Casino Night ({{user}})
+      		</a>
+        </div>
+      </div>
+  </nav>
+  <div class="alert alert-info marquee" role="alert">
+    <marquee ng-show="currentBet.active">Next Match: <strong>{{players.player1}}</strong> vs <strong>{{players.player2}}</strong></marquee>
+    <marquee ng-hide="currentBet.active">Betting is over! <strong>Let's get it on!</strong></marquee>
+  </div>
+  <form ng-show="matchStatus == 'waiting'">
+  	<input type="text" placeholder="player1" ng-model="match.players[0]">
+  	<input type="text" placeholder="player2" ng-model="match.players[1]">
+  	<input type="number" placeholder="time" ng-model="match.remaining_time">
+  	<input type="text" placeholder="game" ng-model="match.game">
+  	<button ng-click="startNewMatch()">Start</button>
+  </form>
+  {{match}}
+  <button ng-click="closeBetting()" ng-show="matchStatus == 'betting'">Close Betting</button>
+  <button ng-repeat="player in match.players track by $index" ng-click="submitWinner($index)" ng-show="matchStatus == 'fighting'">{{player}}</button>
+</body>
+<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+<script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+	var app = angular.module('TestApp', [])
+	app.controller('TestController', ['$scope', '$interval', function($scope, $interval){
+		$scope.name = "Ronald"
+    $scope.currentBet = {
+      "active":true,
+      "timer":{
+        "minute":0,
+        "second":3
+      }
+    }
+
+    var socket = io.connect('http://27f21bd7.ngrok.io/');
+    $scope.matchStatus = 'waiting';
+    $scope.match = {}
+    $scope.match.game = "Super Smash Bros for Wii U"
+   	$scope.match.active = true
+   	$scope.match.remaining_time = 120
+   	$scope.match.players = ["Peach","Bowser"]
+
+    $scope.startNewMatch = function(){
+    	socket.emit('saveNewMatch', $scope.match)
+    	$scope.matchStatus = 'betting';
+    }
+
+    $scope.submitWinner = function(player){
+    	socket.emit('submitWinner', {
+    		player: player,
+    		match_id: $scope.match.id
+    	})
+    	$scope.matchStatus = 'waiting';
+    }
+
+    socket.on('startNewMatch', function(data){
+    	$scope.$apply(function(){
+    		$scope.match = data;
+    	})
+    })
+
+    socket.on('bettingClosed', function(data){
+    	$scope.$apply(function(){
+    		$scope.matchStatus = 'fighting'
+    	})
+    })
+
+    $scope.closeBetting = function(){
+    	socket.emit('closeMatch', {match_id:$scope.match.id})
+    	$scope.matchStatus = 'fighting';
+    }
+    $scope.startBetTimer = function(){
+      $scope.stopBetTimer();
+      $scope.currentBet.timer.minute = 0;
+      $scope.currentBet.timer.second = 10;
+      $scope.currentBet.active = true;
+      stop = $interval(function(){
+        var clock = $scope.currentBet.timer
+        if(clock.minute > 0 || clock.second > 0){
+          if(clock.second == 0){
+            clock.second = 60;
+            clock.minute -= 1;
+          }
+        clock.second -= 1;
+        }else{
+          $scope.stopBetTimer();
+        }
+      }, 1000)
+    }
+
+    socket.on('remaining_time', function(data){
+    	$scope.currentBet.remaining_time = data.remaining_time;
+    	console.log(data.remaining_time);
+    })
+
+    socket.on('sendUserInfo', function(data){
+      console.log(data)
+      $scope.user = data.user.map(function(data){
+        return {
+          username: data.username,
+          money: data.money
+        }
+      });
+    })
+    socket.emit('askUserInfo', {user:2})
+  socket.on('news', function (data) {
+    var player = data.bets[0]['player_id'];
+    var bets = data.bets.map(function(data){
+      return {
+        name: data.username,
+        bet: data.amount
+      }
+    });
+    console.log(bets)
+    switch(player){
+      case "1":
+        $scope.betters.player1 = bets;
+        console.log($scope.betters.player1)
+        break;
+      case "2":
+        $scope.betters.player2 = bets;
+        console.log($scope.betters.player2)
+        break;
+    }
+  });
+
+  $scope.sendData = function(){
+    socket.emit('my other event', 
+      { 
+        betData: [2, 30, 1, 1]
+      });
+  }
+    $scope.stopBetTimer = function(){
+      if(angular.isDefined(stop)){
+        $interval.cancel(stop);
+        stop = undefined;
+        $scope.currentBet.active = false;
+        $scope.currentBet.timer.minute = 0;
+        $scope.currentBet.timer.second = 0;
+        $scope.showBet1 = false;
+        $scope.showBet2 = false;
+        $scope.totalBets = {
+          player1: 0,
+          player2: 0
+        }
+        $scope.betters.player1.forEach(function(value, index, ar){
+          $scope.totalBets.player1 += parseInt(value.bet)
+        })
+        $scope.betters.player2.forEach(function(value, index, ar){
+          $scope.totalBets.player2 += parseInt(value.bet)
+        })
+        console.log($scope.totalBets)
+        $scope.odds = {};
+        if($scope.totalBets.player1 > $scope.totalBets.player2){
+          $scope.odds.player1 = Math.round(($scope.totalBets.player1 / $scope.totalBets.player2) * 100)/100
+          $scope.odds.player2 = 1
+        }else{
+          $scope.odds.player2 = Math.round(($scope.totalBets.player1 / $scope.totalBets.player2) * 100)/100
+          $scope.odds.player1 = 1
+        }
+        console.log($scope.odds)
+      }
+    }
+
+    $scope.closeBet = function(player){
+      if(player == 1){
+        socket.emit('my other event', 
+        { 
+          betData: [2, $scope.player1Bet, 1, 1]
+        });
+        var bet = {
+          "name":"Anonymous", 
+          "bet":$scope.player1Bet
+        }
+        $scope.showBet1 = false;
+      }else{
+        socket.emit('my other event', 
+        { 
+          betData: [2, $scope.player2Bet, 1, 2]
+        });
+        $scope.showBet2 = false;
+      }
+      $scope.player1Bet = undefined;
+      $scope.player2Bet = undefined;
+    }
+    $scope.betters = {
+      "player1": [
+        {
+          "name":"dada5714",
+          "bet":30
+        },
+        {
+          "name":"makeitreyn",
+          "bet":10}
+      ],
+      "player2": [
+        {
+          "name":"ionicbearcannon",
+          "bet":5
+        },
+        {
+          "name":"loldbz",
+          "bet":10
+        }
+      ]
+    }
+    $scope.startBetTimer();
+	}])
+</script>
+<style type="text/css">
+  .navbar {
+    border-radius: 0;
+  }
+  .marquee {
+    margin-top: -20px;
+    border-radius: 0;
+  }
+  .time {
+    font-size: 40px;
+  }
+</style>
+</html>
