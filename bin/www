@@ -8,7 +8,7 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
 conString = process.env.DATABASE_URL
 /**
  * Get port from environment and store in Express.
@@ -25,6 +25,8 @@ var server = http.createServer(app);
 var io = require('socket.io')(server);
 var client = new pg.Client(conString);
 client.connect();
+
+
 
 var countDown = function(data){
   console.log("counting down")
@@ -51,13 +53,46 @@ var countDown = function(data){
 
 }
 
-var userView = io
-  .of('/user/1')
+var streamView = io
+  .of('/stream')
   .on('connection', function(socket){
-
+    socket.on('getStreamInfo', function(data){
+      var queryString = "select * from test.users where username = $1"
+      client.query(queryString, [data.streamer], function(err, result){
+        if(err){
+          console.log(err);
+        }else{
+          socket.emit('sendStreamInfo', result.rows[0])
+        }
+      })
+    })
+    socket.on('getRecentMatch', function(data){
+      var queryString = "select * from test.matches where user_id = (select id from test.users where username = $1) order by test.matches.id desc limit 1";
+      client.query(queryString, [data.streamer], function(err, result){
+        if(err){
+          console.log(err);
+        }
+        else{
+          socket.emit('sendRecentMatch', result.rows[0])
+          console.log(result.rows)
+        }
+      })
+    })
   })
 
-var main = io.on('connection', function (socket) {
+var user = io
+  .of('/user')
+  .on('connection', function(socket){
+    socket.on('askUserInfo', function(data){
+      console.log("Here")
+      var queryString = "select * from test.users where id = $1";
+      client.query(queryString, [data.user],function(err, result){
+        socket.emit('sendUserInfo',{user:result.rows})
+      })
+  })
+  })
+
+/*var main = io.on('connection', function (socket) {
   console.log("Here")
     var queryString = "select * from test.match order by id desc";
     client.query(queryString, function(err, result){
@@ -185,7 +220,7 @@ var main = io.on('connection', function (socket) {
     })
   })
   //console.log(socket);
-});
+});*/
 
 /**
  * Listen on provided port, on all network interfaces.

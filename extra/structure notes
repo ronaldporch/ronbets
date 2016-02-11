@@ -1,0 +1,25 @@
+casinonight.com
+	show stream with most viewers with bets
+
+casinonight.com/users
+	list of users currently betting
+	list of users in the system
+
+casinonight.com/users/{username}
+	user stream (if any)
+	user stats (per game) (wins, losses)
+
+casinonight.com/games
+	list of games being streamed
+	list of games in the system
+
+casionight.com/games/{gamename}
+	current streams
+	leaderboard of bets for users (sort by amount of money won/successful bets)
+
+casinonight.com/streams/{id}
+	betting stream
+
+	insert into test.matches (players, game_id, remaining_time) values (ARRAY[CAST('{"player": "Captain Falcon", "odds": "1", "total": "0"}' AS json),CAST('{"player": "Corrin", "odds": "1", "total": "0"}' as json)], 1, 120)
+
+	select players[1]->'player' from test.matches
