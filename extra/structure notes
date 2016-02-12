@@ -26,3 +26,12 @@ casinonight.com/portal
 	insert into test.matches (players, game_id, remaining_time) values (ARRAY[CAST('{"player": "Captain Falcon", "odds": "1", "total": "0"}' AS json),CAST('{"player": "Corrin", "odds": "1", "total": "0"}' as json)], 1, 120)
 
 	select players[1]->'player' from test.matches
+
+	Khe857GELSemTfikAAAB
+	
+
+	update test.users set money = money + ((select amount from test.bets where match_id = $1 and player_id = $2) * case when (select players[$3]->odds from test.matches where test.matches.id = $1) = 0 then 2 else (2 + (select players[$3]->odds from test.matches where test.matches.id = $1) - 1.00) end)
+
+	update test.users set wallet = wallet + ((select amount from test.bets where match_id = 35 and player_id = 1 and user_id = test.users.id) * case when CAST((select players[2] ->> 'odds' from test.matches where test.matches.id = 35) as integer) = 0 then 2 else (1 + CAST((select players[2] ->> 'odds' from test.matches where test.matches.id = 35) as numeric)) end) from test.bets where match_id = 35 and player_id = 1 and user_id = test.users.id
+
+	update test.users set wallet = wallet + ((select amount from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id) * case when CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as integer) = 0 then 2 else (1 + CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as numeric)) end) from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id

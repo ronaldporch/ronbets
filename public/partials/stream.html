@@ -1,21 +1,18 @@
 <div class="alert alert-info marquee" role="alert">
-    <marquee ng-show="currentBet.active">Next Match for <strong>{{currentBet.game}}</strong>: <strong>{{currentBet.players[0]}}</strong> vs <strong>{{currentBet.players[1]}}</strong></marquee>
-    <marquee ng-hide="currentBet.active || currentBet.winner">Betting is over! <strong>Let's get it on!</strong></marquee>
-    <marquee ng-show="currentBet.winner">This game's winner is: <strong>{{currentBet.players[currentBet.winner]}}!</strong></marquee>
+    <marquee ng-show="currentMatch.betting">Next Match for <strong>{{currentMatch.game}}</strong>: <strong>{{currentMatch.players[0].name}}</strong> vs <strong>{{currentMatch.players[1].name}}</strong></marquee>
+    <marquee ng-hide="currentMatch.betting || currentMatch.winner">Betting is over! <strong>Let's get it on!</strong></marquee>
+    <marquee ng-show="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
   </div> 
+  {{user}}
 	<div class="container-fluid">
     <div class="col-md-5" id="stream-view">
-      <div class="center-block" ng-include src="'partials/matchView/stream.html'"></div>
-      <div class="center-block" ng-include src="'partials/matchView/chat.html'"></div>
+      <!--<div class="center-block" ng-include src="'partials/matchView/stream.html'"></div>
+      <div class="center-block" ng-include src="'partials/matchView/chat.html'"></div>-->
       
     </div>
     <div class="col-md-7">
       <div class="row">
-        <div class="col-md-12">
-        <div class="alert alert-danger" role="alert">
-          <p class="text-center time"><b>{{currentBet.timer.minute}}:<span ng-show="currentBet.remaining_time % 60 < 10">0</span>{{currentBet.remaining_time % 60}}</b></p>
-        </div>
-        </div>
+        
         <div ng-include src="'partials/matchView/bets.html'"></div>
       </div>
     </div>

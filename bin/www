@@ -9,7 +9,7 @@ var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
 //var conString = "postgres://postgres:Blazeteam1@localhost/test"
-conString = "postgres://postgres:Blazeteam1@localhost/test"
+conString = process.env.DATABASE_URL
 /**
  * Get port from environment and store in Express.
  */
@@ -30,38 +30,59 @@ client.connect();
 
 var countDown = function(data){
   console.log("counting down")
-  var queryString = "update test.match set remaining_time = remaining_time - 1 where id = $1 returning remaining_time";
-  client.query(queryString, [data.id], function(err, result){
+  var queryString = "update test.matches set remaining_time = remaining_time - 1 where id = $1 returning remaining_time";
+  client.query(queryString, [data.match.id], function(err, result){
     if(err){
       console.log(err);
     }else{
-      io.emit('remaining_time', {remaining_time: result.rows[0]['remaining_time']})
+      data.socketIO.to(data.stream_name).emit('remaining_time', {remaining_time: result.rows[0]['remaining_time']})
       if(result.rows[0]['remaining_time'] == 0){
         console.log("Ending Betting")
-          var queryString = "update test.match set remaining_time = 0, betting = false where id = $1 returning *"
-          client.query(queryString, [data.match_id], function(err, result){
+          var queryString = "update test.matches set remaining_time = 0, betting = false where id = $1 returning *"
+          client.query(queryString, [data.match.id], function(err, result){
             if(err){
               console.log(err)
             }else{
-              io.emit('bettingClosed', result.rows[0])
+              data.socketIO.to(data.stream_name).emit('bettingClosed', result.rows[0])
             }
           })
         clearInterval(interval);
       }
     }
   })
-
 }
 
 var streamView = io
   .of('/stream')
-  .use(function(socket, next) {
-    console.log(socket.request._query)
-    // socket.request._query.token is accessible here, for me, and will be '12345'
-    next();
-})
   .on('connection', function(socket){
+    socket.on('submitWinner', function(data){
+      var queryString = "update test.matches set winner = $1, closed = true where id = $2 returning *";
+      console.log('match id: ', data.currentMatch.id)
+      client.query(queryString, [data.winner, data.currentMatch.id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          streamView.to(data.stream_name).emit('showWinner', result.rows[0])
+          console.log(result.rows[0])
+          var odds = ""
+          if(data.winner == 1){
+            odds = 2
+          }else{
+            odds = 1
+          }
+          var queryString = "update test.users set wallet = wallet + ((select amount from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id) * case when CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as integer) = 0 then 2 else (1 + CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as numeric)) end) from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id returning *";
+          client.query(queryString, [data.currentMatch.id, data.winner, odds], function(err){
+            if(err){
+              console.log(err)
+            }else{
+              console.log(result.rows)
+            }
+          })
+        }
+      })
+    })
     socket.on('getStreamInfo', function(data){
+      socket.join(data.streamer)
       var queryString = "select * from test.users where username = $1"
       client.query(queryString, [data.streamer], function(err, result){
         if(err){
@@ -71,26 +92,117 @@ var streamView = io
         }
       })
     })
+      socket.on('getUserInfo', function(data){
+      var queryString = "select * from test.users where username = $1"
+      client.query(queryString, [data.user], function(err, result){
+        if(err){
+          console.log(err);
+        }else{
+          socket.emit('sendUserInfo', result.rows[0])
+        }
+      })
+    })
+    socket.on('getConnection', function(data){
+      socket.join(data.user.stream_name)
+      console.log("Admin coming in")
+      var queryString = "select * from test.matches where streamer_id = $1 order by id desc limit 1"
+      client.query(queryString, [data.user.id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          socket.emit('latestMatch', result.rows[0])
+        }
+      })
+    })
+    socket.on('sendNewMatch', function(data){
+      var queryString = "insert into test.matches (players, game_id, remaining_time, streamer_id) values ($1, $2, $3, $4) returning *"
+      client.query(queryString, [data.players, 1, data.remaining_time, data.streamer_id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          var gameObject = {
+            match: result.rows[0],
+            socketIO: streamView,
+            stream_name: data.stream_name
+          }
+          streamView.to(data.stream_name).emit('startNewMatch', result.rows[0])
+          socket.emit('latestMatch', result.rows[0])
+          if(typeof interval !== 'undefined'){
+            clearInterval(interval);
+          }
+            data.socketIO = streamView
+            interval = setInterval(countDown, 1000, gameObject);
+          }
+      })
+    })
+    socket.on('message', function(data){
+      console.log(data.streamer)
+      streamView.to(data.streamer).emit('checkMessage',{
+        message: data.message,
+        rooms: socket.rooms
+      })
+    })
+    socket.on('sendBet', function(data){
+      var queryString = "insert into test.bets (match_id, player_id, amount, user_id) values ($1, $2, $3, $4) returning *"
+      client.query(queryString, [data.bet.match_id, data.bet.player, data.bet.amount, data.bet.user_id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          socket.emit('yourBet', result.rows[0])
+          var queryString = "select * from test.bets where match_id = $1 order by id desc"
+          client.query(queryString, [data.bet.match_id], function(err, result){
+            if(err){
+              console.log(err)
+            }else{
+              streamView.to(data.streamer.username).emit('currentBets', result.rows)
+              var queryString = "update test.users set wallet = wallet - $1 where id = $2 returning *"
+              client.query(queryString, [data.bet.amount, data.bet.user_id], function(err, result){
+                if(err){
+                  console.log(err)
+                }else{
+                  socket.emit('yourWallet', result.rows[0])
+                }
+              })
+            }
+          })
+        }
+      })
+    })
     socket.on('getRecentMatch', function(data){
+      console.log("Streamer: ", data.streamer)
       var queryString = "select * from test.matches where streamer_id = (select id from test.users where username = $1) order by test.matches.id desc limit 1";
       client.query(queryString, [data.streamer], function(err, result){
         if(err){
           console.log(err);
         }
         else{
-          socket.emit('sendRecentMatch', result.rows[0])
-          var queryString = "select * from test.bets where match_id = $1 and user_id = $2"
+          console.log(result.rows)
+          if(result.rows.length > 0){
+            socket.emit('sendRecentMatch', result.rows[0])
+          var queryString = "select * from test.bets where match_id = $1 and user_id = $2 order by id desc"
+          console.log(result.rows[0]['id'], data.user)
           client.query(queryString, [result.rows[0]['id'], data.user], function(err, result){
             if(err){
               console.log(err);
             }else{
               if(result.rows){
-
+                console.log(result.rows[0])
+                socket.emit('yourBet', result.rows[0])
               }else{
 
               }
             }
           })
+
+          var queryString = "select * from test.bets where match_id = $1 order by id desc"
+          client.query(queryString, [result.rows[0]['id']], function(err, result){
+            if(err){
+              console.log(err);
+            }else{
+              socket.emit('currentBets', result.rows)
+            }
+          })
+          }
           console.log(result.rows)
         }
       })
@@ -106,7 +218,7 @@ var user = io
       client.query(queryString, [data.user],function(err, result){
         socket.emit('sendUserInfo',{user:result.rows})
       })
-  })
+    })
   })
 
 /*var main = io.on('connection', function (socket) {

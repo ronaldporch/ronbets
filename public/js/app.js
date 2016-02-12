@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight', ['ui.router', 'CasinoNight.stream'])
+var app = angular.module('CasinoNight', ['ui.router', 'CasinoNight.stream', 'CasinoNight.portal'])
 app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $stateProvider){
   $urlRouterProvider.otherwise('/')
   $stateProvider
@@ -55,13 +55,10 @@ app.controller('GameController', ['$scope', '$stateParams', function($scope, $st
   $scope.game = $stateParams.game.replace(/-/g, " ")
   console.log($scope.game)
 }])
-app.controller('PortalController', ['$scope', function($scope){
-  
-}])
 app.controller('AdminController', ['$scope', function($scope){
   var server = "http://localhost:3000/user"
   var socket = io.connect(server);
-  socket.emit('askUserInfo', {user:2})
+  socket.emit('askUserInfo', {user:1})
   socket.on('sendUserInfo', function(data){
     $scope.$apply(function(){
       $scope.user = data.user[0];
