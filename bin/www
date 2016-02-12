@@ -9,7 +9,7 @@ var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
 //var conString = "postgres://postgres:Blazeteam1@localhost/test"
-conString = process.env.DATABASE_URL
+conString = "postgres://postgres:Blazeteam1@localhost/test"
 /**
  * Get port from environment and store in Express.
  */
@@ -38,7 +38,7 @@ var countDown = function(data){
       io.emit('remaining_time', {remaining_time: result.rows[0]['remaining_time']})
       if(result.rows[0]['remaining_time'] == 0){
         console.log("Ending Betting")
-          var queryString = "update test.match set remaining_time = 0, active = false where id = $1 returning *"
+          var queryString = "update test.match set remaining_time = 0, betting = false where id = $1 returning *"
           client.query(queryString, [data.match_id], function(err, result){
             if(err){
               console.log(err)
@@ -55,6 +55,11 @@ var countDown = function(data){
 
 var streamView = io
   .of('/stream')
+  .use(function(socket, next) {
+    console.log(socket.request._query)
+    // socket.request._query.token is accessible here, for me, and will be '12345'
+    next();
+})
   .on('connection', function(socket){
     socket.on('getStreamInfo', function(data){
       var queryString = "select * from test.users where username = $1"
@@ -67,13 +72,25 @@ var streamView = io
       })
     })
     socket.on('getRecentMatch', function(data){
-      var queryString = "select * from test.matches where user_id = (select id from test.users where username = $1) order by test.matches.id desc limit 1";
+      var queryString = "select * from test.matches where streamer_id = (select id from test.users where username = $1) order by test.matches.id desc limit 1";
       client.query(queryString, [data.streamer], function(err, result){
         if(err){
           console.log(err);
         }
         else{
           socket.emit('sendRecentMatch', result.rows[0])
+          var queryString = "select * from test.bets where match_id = $1 and user_id = $2"
+          client.query(queryString, [result.rows[0]['id'], data.user], function(err, result){
+            if(err){
+              console.log(err);
+            }else{
+              if(result.rows){
+
+              }else{
+
+              }
+            }
+          })
           console.log(result.rows)
         }
       })

@@ -4,64 +4,20 @@
     <marquee ng-show="currentBet.winner">This game's winner is: <strong>{{currentBet.players[currentBet.winner]}}!</strong></marquee>
   </div> 
 	<div class="container-fluid">
-    <div class="col-md-8">
-      <div>
-        <iframe ng-src="{{streamUrl}}" id="screen" width="640" height="300" allowfullscreen></iframe>
-      </div>
+    <div class="col-md-5" id="stream-view">
+      <div class="center-block" ng-include src="'partials/matchView/stream.html'"></div>
+      <div class="center-block" ng-include src="'partials/matchView/chat.html'"></div>
+      
+    </div>
+    <div class="col-md-7">
       <div class="row">
-        {{currentBet.totals}}
-        <div>Odds: {{currentBet.odds[0]}} : {{currentBet.odds[1]}}</div>
         <div class="col-md-12">
         <div class="alert alert-danger" role="alert">
           <p class="text-center time"><b>{{currentBet.timer.minute}}:<span ng-show="currentBet.remaining_time % 60 < 10">0</span>{{currentBet.remaining_time % 60}}</b></p>
         </div>
         </div>
-        <div class="col-sm-6">
-          <table class="table table-striped">
-            <tr>
-              <th class="">{{currentBet.players[0]}} 
-                <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet1 = true" ng-show="currentBet.active">Bet</button>
-                <form class="form-inline" ng-show="showBet1" ng-submit="closeBet(1)">
-  <div class="form-group">
-    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
-    <div class="input-group">
-      <div class="input-group-addon">$</div>
-      <input type="number" class="form-control" id="exampleInputAmount" max="{{user.money}}" min="0" placeholder="Amount" ng-model="player1Bet" required>
-    </div>
-  </div>
-</form>
-              </th>
-            </tr>
-            <tr ng-repeat="better in betters.player1">
-              <td>${{better.bet}} <small>{{better.name}}<small></td>
-            </tr>
-          </table>
-        </div>
-        <div class="col-sm-6">
-          <table class="table table-striped">
-            <tr>
-              <th class="align-center">{{currentBet.players[1]}}
-                <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet2 = true" ng-show="currentBet.active">Bet</button>
-                <form class="form-inline" ng-show="showBet2" ng-submit="closeBet(2)">
-  <div class="form-group">
-    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
-    <div class="input-group">
-      <div class="input-group-addon">$</div>
-      <input type="number" class="form-control" id="exampleInputAmount" placeholder="Amount" max="{{user.money}}" min="0" ng-model="player2Bet" required>
-    </div>
-  </div>
-</form>
-              </th>
-            </tr>
-            <tr ng-repeat="better in betters.player2">
-              <td>${{better.bet}} <small>{{better.name}}<small></td>
-            </tr>
-          </table>
-        </div>
+        <div ng-include src="'partials/matchView/bets.html'"></div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <iframe frameborder="0" scrolling="no" ng-src="{{chatUrl}}" height="700" width="325"></iframe>
     </div>
     
 	</div>

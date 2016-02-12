@@ -1,0 +1,42 @@
+<div class="col-sm-6">
+          <table class="table table-striped">
+            <tr>
+              <th class="">{{currentBet.players[0]}} 
+                <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet1 = true" ng-show="currentBet.active">Bet</button>
+                <form class="form-inline" ng-show="showBet1" ng-submit="closeBet(1)">
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
+    <div class="input-group">
+      <div class="input-group-addon">$</div>
+      <input type="number" class="form-control" id="exampleInputAmount" max="{{user.money}}" min="0" placeholder="Amount" ng-model="player1Bet" required>
+    </div>
+  </div>
+</form>
+              </th>
+            </tr>
+            <tr ng-repeat="better in betters.player1">
+              <td>${{better.bet}} <small>{{better.name}}<small></td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-sm-6">
+          <table class="table table-striped">
+            <tr>
+              <th class="align-center">{{currentBet.players[1]}}
+                <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet2 = true" ng-show="currentBet.active">Bet</button>
+                <form class="form-inline" ng-show="showBet2" ng-submit="closeBet(2)">
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
+    <div class="input-group">
+      <div class="input-group-addon">$</div>
+      <input type="number" class="form-control" id="exampleInputAmount" placeholder="Amount" max="{{user.money}}" min="0" ng-model="player2Bet" required>
+    </div>
+  </div>
+</form>
+              </th>
+            </tr>
+            <tr ng-repeat="better in betters.player2">
+              <td>${{better.bet}} <small>{{better.name}}<small></td>
+            </tr>
+          </table>
+        </div>
