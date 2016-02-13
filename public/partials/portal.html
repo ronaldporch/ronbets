@@ -1,10 +1,10 @@
 <form>
-  <input type="text" placeholder="player1" ng-model="currentMatch.players[0].name">
-  <input type="text" placeholder="player2" ng-model="currentMatch.players[1].name">
-  <input type="number" placeholder="time" ng-model="currentMatch.remaining_time">
+  <input type="text" placeholder="player1" ng-model="players[0].name">
+  <input type="text" placeholder="player2" ng-model="players[1].name">
+  <input type="number" placeholder="time" ng-model="remaining_time">
   <input type="text" placeholder="game" ng-model="currentMatch.game">
   <button ng-click="sendNewMatch()">Start</button>
 </form>
   {{match}}
 <button ng-click="closeBetting()">Close Betting</button>
-<button ng-repeat="player in currentMatch.players track by $index" ng-click="submitWinner($index + 1)">{{player.name}}</button>
+<button ng-repeat="player in players track by $index" ng-click="submitWinner($index + 1)">{{player}}</button>

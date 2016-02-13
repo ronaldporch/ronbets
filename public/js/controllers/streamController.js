@@ -34,13 +34,16 @@ app.controller('StreamController', ['$scope', '$state', '$sce', function($scope,
             $scope.currentMatch = data
         })
         socket.emit('getUserInfo', {
-            user: "dada5714"
+            user: 1
         })
+    })
+    socket.emit('getUserInfo', {
+        user: 1
     })
     socket.on('sendUserInfo', function(data){
         $scope.$apply(function(){
             console.log('here')
-        $scope.user.wallet = data.wallet
+            $scope.user.wallet = data.wallet
         })
     })
     socket.on('remaining_time', function(data){

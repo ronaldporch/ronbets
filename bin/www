@@ -8,8 +8,9 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-conString = process.env.DATABASE_URL
+var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//conString = process.env.DATABASE_URL
+console.log(conString)
 /**
  * Get port from environment and store in Express.
  */
@@ -81,6 +82,9 @@ var streamView = io
         }
       })
     })
+    socket.on('disconnect', function(data){
+      console.log('disconnected')
+    })
     socket.on('getStreamInfo', function(data){
       socket.join(data.streamer)
       var queryString = "select * from test.users where username = $1"
@@ -93,7 +97,7 @@ var streamView = io
       })
     })
       socket.on('getUserInfo', function(data){
-      var queryString = "select * from test.users where username = $1"
+      var queryString = "select * from test.users where id = $1"
       client.query(queryString, [data.user], function(err, result){
         if(err){
           console.log(err);
@@ -205,18 +209,6 @@ var streamView = io
           }
           console.log(result.rows)
         }
-      })
-    })
-  })
-
-var user = io
-  .of('/user')
-  .on('connection', function(socket){
-    socket.on('askUserInfo', function(data){
-      console.log("Here")
-      var queryString = "select * from test.users where id = $1";
-      client.query(queryString, [data.user],function(err, result){
-        socket.emit('sendUserInfo',{user:result.rows})
       })
     })
   })

@@ -3,7 +3,6 @@
     <marquee ng-hide="currentMatch.betting || currentMatch.winner">Betting is over! <strong>Let's get it on!</strong></marquee>
     <marquee ng-show="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
   </div> 
-  {{user}}
 	<div class="container-fluid">
     <div class="col-md-5" id="stream-view">
       <!--<div class="center-block" ng-include src="'partials/matchView/stream.html'"></div>

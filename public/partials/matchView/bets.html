@@ -52,7 +52,7 @@
   <div ng-hide="!currentMatch.betting || user.currentBet">
     <button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary btn-lg" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
     <div ng-show="user.bet.player">
-      <input type="text" class="" ng-model="user.bet.amount">
+      <input type="number" class="" ng-model="user.bet.amount" min="0" max="{{user.wallet}}">
       <button ng-click="submitBet()">Submit Bet</button>
       <button ng-click="cancelBet()">Cancel Bet</button>
     </div>

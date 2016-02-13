@@ -15,6 +15,7 @@ app.controller('PortalController', ['$scope', function($scope){
   		$scope.currentMatch = data
   	})
   })
+  $scope.players = []
 
   $scope.submitWinner = function(player_id){
   	socket.emit('submitWinner', {
@@ -24,15 +25,16 @@ app.controller('PortalController', ['$scope', function($scope){
   	})
   }
   $scope.sendNewMatch = function(){
-  	$scope.currentMatch.players.forEach(function(player, index, arr){
+  	$scope.players.forEach(function(player, index, arr){
   		player.odds = 1;
   		player.total = 0;
   	})
+    console.log($scope.players)
   	socket.emit('sendNewMatch', {
   		streamer_id: $scope.user.id,
   		stream_name: $scope.user.stream_name,
-  		players: [$scope.currentMatch.players[0], $scope.currentMatch.players[1]],
-  		remaining_time: $scope.currentMatch.remaining_time
+  		players: $scope.players,
+  		remaining_time: $scope.remaining_time
   	})
   }
 }])

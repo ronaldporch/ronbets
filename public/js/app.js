@@ -37,11 +37,39 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
       templateUrl: "partials/portal.html",
       controller: "PortalController"
     })
+    .state('signIn', {
+      url: "/sign_in",
+      templateUrl: "partials/sign_in.html",
+      controller: "SignInController"
+    })
+    .state('register', {
+      url: "/register",
+      templateUrl: "partials/register.html",
+      controller: "RegisterController"
+    })
+    .state('activate', {
+      url: "/activate/{id}",
+      templateUrl: "partials/activate.html",
+      controller: "ActivationController"
+    })
 }])
 app.controller('HomeController', ['$scope', function($scope){
 
 }])
 app.controller('UsersController', ['$scope', function($scope){
+  
+}])
+app.controller('SignInController', ['$scope', function($scope){
+  
+}])
+app.controller('RegisterController', ['$scope', '$http', function($scope, $http){
+  $scope.user = {}
+  $http.post('localhost:3000/api/auth/register', $scope.user)
+    .then(function(res){
+
+    })
+}])
+app.controller('ActivationController', ['$scope', function($scope){
   
 }])
 app.controller('UserController', ['$scope', '$stateParams', function($scope, $stateParams){
