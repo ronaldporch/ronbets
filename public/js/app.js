@@ -64,13 +64,29 @@ app.controller('SignInController', ['$scope', function($scope){
 }])
 app.controller('RegisterController', ['$scope', '$http', function($scope, $http){
   $scope.user = {}
-  $http.post('localhost:3000/api/auth/register', $scope.user)
+  $scope.register = function(){
+    console.log("Hello")
+    $http.post('http://localhost:3000/api/auth/register', $scope.user)
     .then(function(res){
-
+      console.log('Word')
     })
+  }
 }])
-app.controller('ActivationController', ['$scope', function($scope){
-  
+app.controller('ActivationController', ['$scope', '$stateParams', '$http', function($scope, $stateParams, $http){
+  $scope.getUser = function(){
+    $scope.user = {}
+    $http.get('http://localhost:3000/api/auth/getUser/' + $stateParams.id)
+      .then(function(res){
+        console.log(res.data)
+        $scope.user.username = res.data.username
+        $scope.user.id = res.data.id
+        $scope.user.stream_service = "none"
+      })
+  }
+  $scope.activateUser = function(){
+    console.log($scope.user)
+  }
+  $scope.getUser()
 }])
 app.controller('UserController', ['$scope', '$stateParams', function($scope, $stateParams){
   $scope.user = $stateParams.user

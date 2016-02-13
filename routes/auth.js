@@ -3,6 +3,7 @@ var router = express.Router();
 var passport = require('passport');
 var auth = require('../functions/user.js')
 var pg = require('pg')
+var nodemailer = require('nodemailer')
 var conString = "postgres://postgres:Blazeteam1@localhost/test"
 
 var transporter = nodemailer.createTransport({
@@ -34,32 +35,26 @@ router.post('/register', function(req, res, next){
 		if(err){
 			return console.error('error fetching client from pool', err);
 		}
-		client.query('insert into test.users (username, email, fname, lname, hash, salt) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar, $5::varchar, $6::varchar)', user, function(err, result){
+		client.query('insert into test.users (username, email, hash, salt) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar) returning *', user, function(err, result){
 				done();
 				if(err){
+					console.log(err)
 					return res.status(400).json({error: true, message: err})
 				}
-				client.query('select * from users where username = $1::varchar', [req.body.username], function(err, results){
-					done();
+				var user = result.rows[0]
+				var mailOptions = {
+					from: 'Ronald Porch <dada5714@gmail.com>',
+					to: user.email,
+					subject: 'Registered for Casino Night',
+					text: 'Hello, ' + user.username + '. You registered for Casino Nights. Please go to localhost:3000/#/activate/' + user.id + ' to activate your account.',
+					html: '<h2>Hello ' + user.username + '.</h2> <p>You registered for Casino Night. Follow <a href="localhost:3000/#/activate/' + user.id + '">this link</a> to confirm your account</p><br><small>Link isn\'t working? localhost:3000/#/activate/' + user.id + '</small>'
+				}
+				transporter.sendMail(mailOptions, function(err, info){
 					if(err){
-						return res.status(400).json({error: true, message: err})
+						return console.log(err)
 					}
-					var user = results.rows[0]
-					var mailOptions = {
-						from: 'Ronald Porch <dada5714@gmail.com>',
-						to: user.email,
-						subject: 'Registered for Casino Night',
-						text: 'Hello, ' + user.username + '. You registered for Casino Nights. Please go to localhost:3000/#/activate/' + user.id + ' to activate your account.',
-						html: '<h2>Hello ' + user.username + '.</h2> <p>You registered for Casino Night. Follow <a href="localhost:3000/#/activate/' + user.id + '">this link</a> to confirm your account</p><br><small>Link isn\'t working? localhost:3000/#/activate/' + user.id + '</small>'
-					}
-					transporter.sendMail(mailOptions, function(err, info){
-						if(err){
-							return console.log(err)
-						}
-						console.log('Message Sent: ' + info.response)
-						return res.json({success: true})
-					})
-					//return res.json({token: auth.generateJWT(user)})
+					console.log('Message Sent: ' + info.response)
+					return res.json({success: true})
 				})
 			})
 		})
@@ -75,7 +70,7 @@ router.get('/getUser/:id', function(req, res, next){
 		if(err){
 			return console.error('error fetching client from pool', err);
 		}
-		client.query('select username, id from users where id = $1::int and user_active = false', [req.user_id], function(err, results){
+		client.query('select username, id from test.users where id = $1::int and user_active = false', [req.user_id], function(err, results){
 			done();
 			if(err){
 				return res.status(400).json({error: true, message: err})
@@ -115,11 +110,13 @@ router.post('/activate', function(req, res, next){
 
 	passport.authenticate('local', function(err, user, info){
 		if(err){return next(err)}
-
 			if(user){
 				pg.connect(conString, function(err, client, done){
 					if(err){
 						return console.error('error fetching client from pool', err);
+					}
+					if(req.body.chatango){
+						
 					}
 					client.query('update users set user_active = true where id = $1::int', [user.id], function(err, results){
 						done();
