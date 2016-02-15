@@ -1,4 +1,11 @@
 var app = angular.module('CasinoNight', ['ui.router', 'CasinoNight.stream', 'CasinoNight.portal'])
+app.run(['$state', '$rootScope', '$location', function($state, $rootScope, $location){
+  $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
+    if(fromState.name == "stream"){
+      console.log($state.params.streamer)
+    }
+  })
+}])
 app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $stateProvider){
   $urlRouterProvider.otherwise('/')
   $stateProvider
