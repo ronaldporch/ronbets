@@ -1,5 +1,12 @@
-var app = angular.module('CasinoNight', ['ui.router', 'CasinoNight.stream', 'CasinoNight.portal'])
-app.run(['$state', '$rootScope', '$location', function($state, $rootScope, $location){
+var app = angular.module('CasinoNight', [
+  'ui.router', 
+  'CasinoNight.stream', 
+  'CasinoNight.portal', 
+  'CasinoNight.chatDirective',
+  'CasinoNight.streamDirective',
+  'CasinoNight.authService'
+])
+app.run(['$state', '$rootScope', '$location', 'Auth', function($state, $rootScope, $location, Auth){
   $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
     if(fromState.name == "stream"){
       console.log($state.params.streamer)
@@ -66,31 +73,49 @@ app.controller('HomeController', ['$scope', function($scope){
 app.controller('UsersController', ['$scope', function($scope){
   
 }])
-app.controller('SignInController', ['$scope', function($scope){
-  
+app.controller('SignInController', ['Auth', '$scope', '$http', '$location', function(Auth, $scope, $http, $location){
+  console.log($location.$$host)
+  $scope.server = ($location.$$host == "localhost") ? "http://localhost:3000/" : $location.$$host;
+  $scope.signIn = function(){
+    console.log($scope.server + '/api/auth/sign_in')
+    $http.post("http://" + $scope.server + '/api/auth/sign_in', $scope.user)
+      .then(function(res){
+        Auth.saveToken(res.data.token)
+        console.log(Auth.getToken())
+        console.log(Auth.isLoggedIn())
+        console.log(res.data)
+      })
+  }
 }])
-app.controller('RegisterController', ['$scope', '$http', function($scope, $http){
+app.controller('RegisterController', ['$scope', '$http',function($scope, $http){
   $scope.user = {}
   $scope.register = function(){
-    console.log("Hello")
-    $http.post('http://localhost:3000/api/auth/register', $scope.user)
+    $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
+    $http.post("http://" + $scope.server + '/api/auth/register', $scope.user)
     .then(function(res){
       console.log('Word')
     })
   }
 }])
-app.controller('ActivationController', ['$scope', '$stateParams', '$http', function($scope, $stateParams, $http){
+app.controller('ActivationController', ['$scope', '$stateParams', '$http', '$location', function($scope, $stateParams, $http, $location){
+  console.log($location.$$host)
+  $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
   $scope.getUser = function(){
     $scope.user = {}
-    $http.get('http://localhost:3000/api/auth/getUser/' + $stateParams.id)
+    $http.get("http://" + $scope.server + '/api/auth/getUser/' + $stateParams.id)
       .then(function(res){
         console.log(res.data)
         $scope.user.username = res.data.username
         $scope.user.id = res.data.id
-        $scope.user.stream_service = "none"
+        $scope.user.streamService = "none"
+        $scope.user.chatService = "stream"
       })
   }
   $scope.activateUser = function(){
+    $http.post("http://" + $scope.server + '/api/auth/activate', $scope.user)
+      .then(function(res){
+        console.log(res.data)
+      })
     console.log($scope.user)
   }
   $scope.getUser()
@@ -106,16 +131,9 @@ app.controller('GameController', ['$scope', '$stateParams', function($scope, $st
   $scope.game = $stateParams.game.replace(/-/g, " ")
   console.log($scope.game)
 }])
-app.controller('AdminController', ['$scope', function($scope){
-  var server = "http://localhost:3000/user"
-  var socket = io.connect(server);
-  socket.emit('askUserInfo', {user:1})
-  socket.on('sendUserInfo', function(data){
-    $scope.$apply(function(){
-      $scope.user = data.user[0];
-    });
-    console.log($scope.user)
-  })
+app.controller('AdminController', ['$scope', 'Auth', function($scope, Auth){
+  $scope.user = Auth.getToken()
+  console.log($scope.user)
 }])
   app.controller('TestController', ['$scope', '$interval', '$rootScope',function($scope, $interval, $rootScope){
     $scope.currentBet = {}
@@ -130,8 +148,8 @@ app.controller('AdminController', ['$scope', function($scope){
       })
     }
 
-    var server = "http://localhost:3000/";
-    var socket = io.connect(server);
+    $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
+    var socket = io.connect($scope.server);
 
     socket.on('bettingClosed', function(data){
       $scope.$apply(function(){

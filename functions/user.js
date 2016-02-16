@@ -20,8 +20,13 @@ auth.generateJWT = function(user){
 	exp.setDate(today.getDate() + 60)
 
 	return jwt.sign({
-		_id: user.id,
+		id: user.id,
 		username: user.username,
+		stream_name: user.stream_name,
+		stream_service: user.stream_service,
+		chat_service: user.chat_service,
+		chatango: user.chatango,
+		wallet: user.wallet,
 		exp: parseInt(exp.getTime() / 1000)
 	}, new Buffer('SECRET', 'base64'))
 }

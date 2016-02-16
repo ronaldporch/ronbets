@@ -1,11 +1,13 @@
 var app = angular.module('CasinoNight.stream', [])
-app.controller('StreamController', ['$scope', '$state', '$sce', function($scope, $stateParams, $sce){
+app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', function($scope, $stateParams, $sce, $location, Auth){
+  $scope.isLoggedIn = Auth.isLoggedIn()
   $scope.streamer = $stateParams.params.streamer;
     $scope.user = {
         bet: {}
     }
   console.log($scope.streamer)
-  var server = "http://localhost:3000/stream";
+  console.log()
+  var server = $location.$$host + "/stream";
     var socket = io(server, {query: "streamer=dada5714"});
     console.log(socket)
 

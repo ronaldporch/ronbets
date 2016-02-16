@@ -4,7 +4,8 @@ var passport = require('passport');
 var auth = require('../functions/user.js')
 var pg = require('pg')
 var nodemailer = require('nodemailer')
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 
 var transporter = nodemailer.createTransport({
 	service: 'Gmail',
@@ -83,7 +84,7 @@ router.get('/getUser/:id', function(req, res, next){
 		})
 	})
 })
-router.post('/login', function(req, res, next){
+router.post('/sign_in', function(req, res, next){
 	if(!req.body.username || !req.body.password){
 		return res.status(400).json({message: 'Please fill out all fields'})
 	}
@@ -115,12 +116,26 @@ router.post('/activate', function(req, res, next){
 					if(err){
 						return console.error('error fetching client from pool', err);
 					}
-					if(req.body.chatango){
-						
+					var queryString = "update test.users set user_active = true";
+					var queryData = []
+					queryData.push(user.id)
+					if(req.body.streamService != 'none'){
+						queryString += ', stream_service = $2, chat_service = $3, stream_name = $4'
+						queryData.push(req.body.streamService)
+						queryData.push(req.body.chatService)
+						queryData.push(req.body.streamName)
+						if(req.body.chatService == 'chatango'){
+							queryString += ", chatango = $4"
+							queryData.push(req.body.chatango)
+						}
 					}
-					client.query('update users set user_active = true where id = $1::int', [user.id], function(err, results){
+					queryString += ' where id = $1::int'
+					console.log(queryString)
+					console.log(queryData)
+					client.query(queryString, queryData, function(err, results){
 						done();
 						if(err){
+							console.log(err)
 							return res.status(400).json({error: true, message: err})
 						}
 						return res.json({token: auth.generateJWT(user)})

@@ -1,12 +1,10 @@
-var app = angular.module('CasinoNight.portal', [])
-app.controller('PortalController', ['$scope', function($scope){
-  var server = "http://localhost:3000/stream";
-  var socket = io(server)
-  $scope.user = {
-  	id: 1,
-  	stream_name: "dada5714"
-  }
-  
+var app = angular.module('CasinoNight.portal', ['CasinoNight.authService'])
+app.controller('PortalController', ['$scope', 'Auth', '$location', function($scope, Auth, $location){
+  console.log($location.$$host)
+  var server = $location.$$host == "localhost" ? "localhost:3000/stream" : $location.$$host + "/stream";
+  var socket = io("http://" + server)
+  $scope.user = Auth.currentUserPayload()
+  console.log($scope.user)
   socket.emit('getConnection', {
   	user: $scope.user
   })

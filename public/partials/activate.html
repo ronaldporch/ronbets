@@ -1,14 +1,14 @@
-<form ng-submit="activateUser()">
+<form name="activation" ng-submit="activateUser()">
 	<input ng-model="user.username" disabled>
-	<input type="radio" name="stream_service" ng-model="user.stream_service" value="none">None
-	<input type="radio" name="stream_service" ng-model="user.stream_service" value="twitch">Twitch
-	<input type="radio" name="stream_service" ng-model="user.stream_service" value="hitbox">Hithox
-	<span ng-hide="user.stream_service == 'none'">
-		<input ng-model="user.stream_name" placeholder="Stream Name">
-		<input type="radio" name="chat_service" ng-model="user.chat_service" value="stream">Stream Chat
-		<input type="radio" name="chat_service" ng-model="user.chat_service" value="chatango">Chatango
-		<input ng-model="user.chatango" ng-show="user.chat_service == 'chatango'" placeholder="chatango room name">
+	<input type="radio" name="stream-service" ng-model="user.streamService" value="none">None
+	<input type="radio" name="stream-service" ng-model="user.streamService" value="twitch">Twitch
+	<input type="radio" name="stream-service" ng-model="user.streamService" value="hitbox">Hithox
+	<span ng-if="user.streamService != 'none'">
+		<input ng-model="user.streamName" placeholder="Stream Name" name="stream-name" required>
+		<input type="radio" name="chat-service" ng-model="user.chatService" value="stream">Stream Chat
+		<input type="radio" name="chat-service" ng-model="user.chatService" value="chatango">Chatango
+		<input ng-model="user.chatango" ng-if="user.chatService == 'chatango'" placeholder="chatango room name" name="chatango-name" required>
 	</span>
-	<input type="password" placeholder="Confirm Password" ng-model="user.password">
+	<input type="password" placeholder="Confirm Password" ng-model="user.password" required>
 	<button type="submit">Activate Account</button>
 </form>

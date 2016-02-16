@@ -1,7 +1,8 @@
 var passport = require('passport')
-var LocalStrategy = require('passport-local').LocalStrategy
+var LocalStrategy = require('passport-local').Strategy
 var pg = require('pg')
 var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 var auth = require("../functions/user.js")
 
 passport.use(new LocalStrategy(function(username, password, done){
