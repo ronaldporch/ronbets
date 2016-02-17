@@ -2,24 +2,27 @@ var app = angular.module('CasinoNight.stream', [])
 app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', function($scope, $stateParams, $sce, $location, Auth){
   $scope.isLoggedIn = Auth.isLoggedIn()
   $scope.streamer = $stateParams.params.streamer;
-    $scope.user = {
-        bet: {}
-    }
-  console.log($scope.streamer)
-  console.log()
-  var server = $location.$$host + "/stream";
-    var socket = io(server, {query: "streamer=dada5714"});
-    console.log(socket)
-
+  $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
+  $scope.user.bet = {}
+  var server = ($location.$$host == "localhost") ? "localhost:3000" + "/stream" : $location.$$host + "/stream"
+    var socket = io(server, {'forceNew': true});
     socket.emit('getRecentMatch', {
         streamer: $scope.streamer,
-        user: 1,
+        user: $scope.user.id,
     })
     socket.on('sendRecentMatch', function(data){
       $scope.$apply(function(){
         $scope.currentMatch = data;
-        console.log($scope.currentMatch);
       })
+    })
+    $scope.$on('$destroy', function(){
+        socket.emit('leaveRoom', {
+            streamer: $scope.streamer
+        })
+        socket.disconnect()
+        socket.emit('disconnect', {
+            streamer: $scope.streamer
+        })
     })
     $scope.startBet = function(player_id){
         $scope.user.bet.player = player_id
@@ -36,23 +39,24 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             $scope.currentMatch = data
         })
         socket.emit('getUserInfo', {
-            user: 1
+            user: $scope.user.id
         })
     })
-    socket.emit('getUserInfo', {
-        user: 1
-    })
-    socket.on('sendUserInfo', function(data){
-        $scope.$apply(function(){
-            console.log('here')
-            $scope.user.wallet = data.wallet
+    if(Auth.isLoggedIn()){
+        socket.emit('getUserInfo', {
+            user: $scope.user.id
         })
-    })
+        socket.on('sendUserInfo', function(data){
+            $scope.$apply(function(){
+                $scope.user.wallet = data.wallet
+            })
+        })
+    }
+
     socket.on('remaining_time', function(data){
         $scope.$apply(function(){
             $scope.currentMatch.remaining_time = data.remaining_time
         })
-        console.log('Penis')
     })
     socket.on('bettingClosed', function(data){
         $scope.$apply(function(){
@@ -63,21 +67,18 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.$apply(function(){
           $scope.currentBets = [[],[]]
         data.forEach(function(value, index, ar){
-          console.log(value)
           if(value.player_id == 1){
             $scope.currentBets[0].push(value)
           }else if(value.player_id == 2){
             $scope.currentBets[1].push(value)
           }
         })
-            console.log($scope.currentBets)  
         })
     })
 
     socket.on('yourBet', function(data){
         $scope.$apply(function(){
             $scope.user.currentBet = data
-            console.log($scope.user.currentBet)
         })
     })
 
@@ -89,17 +90,15 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
 
     $scope.submitBet = function(){
         $scope.user.bet.match_id = $scope.currentMatch.id
-        $scope.user.bet.user_id = 1
+        $scope.user.bet.user_id = $scope.user.id
         socket.emit('sendBet', {
             bet: $scope.user.bet,
             streamer: $scope.streamer
         })
-        console.log($scope.user.bet)
         $scope.user.bet = {}
     }
 
     $scope.cancelBet = function(){
-        console.log($scope.user.bet)
         $scope.user.bet = {}
     }
 
@@ -107,7 +106,6 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     socket.on('sendStreamInfo', function(data){
       $scope.$apply(function(){
         $scope.streamer = data;
-        console.log($scope.streamer)
             $scope.stream = {
                 width: document.getElementById('stream-view').offsetWidth - 30,
                 height: (document.getElementById('stream-view').offsetWidth - 30) / 1.777
@@ -117,22 +115,9 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
       })
     })
     $(window).resize(function(){
-        console.log(document.getElementById('stream-view').offsetWidth)
         $scope.$apply(function(){
             $scope.stream.width = document.getElementById('stream-view').offsetWidth - 30
             $scope.stream.height = $scope.stream.width / 1.777;
         })
-    })
-
-    $scope.message = "";
-    $scope.sendMessage = function(){
-        socket.emit('message', {
-            message: $scope.message,
-            streamer: $scope.streamer.username
-        })
-    }
-    socket.on('checkMessage', function(data){
-        console.log(data.message)
-        console.log(data.rooms)
     })
 }])

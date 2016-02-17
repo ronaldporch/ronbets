@@ -27,10 +27,11 @@ var io = require('socket.io')(server);
 var client = new pg.Client(conString);
 client.connect();
 
-
+interval = {}
 
 var countDown = function(data){
   console.log("counting down")
+  console.log(interval)
   var queryString = "update test.matches set remaining_time = remaining_time - 1 where id = $1 returning remaining_time";
   client.query(queryString, [data.match.id], function(err, result){
     if(err){
@@ -45,9 +46,11 @@ var countDown = function(data){
               console.log(err)
             }else{
               data.socketIO.to(data.stream_name).emit('bettingClosed', result.rows[0])
+              console.log(data.stream_name)
+              clearInterval(interval[data.stream_name]);
+              delete interval[data.stream_name]
             }
           })
-        clearInterval(interval);
       }
     }
   })
@@ -56,6 +59,10 @@ var countDown = function(data){
 var streamView = io
   .of('/stream')
   .on('connection', function(socket){
+    socket.on('leaveRoom', function(data){
+      console.log('leaving room: ', data.streamer)
+      socket.leave(data.streamer.username)
+    })
     socket.on('submitWinner', function(data){
       var queryString = "update test.matches set winner = $1, closed = true where id = $2 returning *";
       console.log('match id: ', data.currentMatch.id)
@@ -83,7 +90,7 @@ var streamView = io
       })
     })
     socket.on('disconnect', function(data){
-      console.log('disconnected')
+      console.log('disconnected from: ')
     })
     socket.on('getStreamInfo', function(data){
       socket.join(data.streamer)
@@ -131,12 +138,15 @@ var streamView = io
           }
           streamView.to(data.stream_name).emit('startNewMatch', result.rows[0])
           socket.emit('latestMatch', result.rows[0])
-          if(typeof interval !== 'undefined'){
-            clearInterval(interval);
+          
+          if(typeof interval[data.stream_name] !== 'undefined'){
+            clearInterval(interval[data.stream_name]);
           }
             data.socketIO = streamView
-            interval = setInterval(countDown, 1000, gameObject);
+            //setBetCountDown(gameOb)
+            interval[data.stream_name] = setInterval(countDown, 1000, gameObject);
           }
+
       })
     })
     socket.on('message', function(data){
@@ -153,7 +163,7 @@ var streamView = io
           console.log(err)
         }else{
           socket.emit('yourBet', result.rows[0])
-          var queryString = "select * from test.bets where match_id = $1 order by id desc"
+          var queryString = "select *, username from test.bets join test.users on test.bets.user_id = test.users.id where match_id = $1 order by test.bets.id desc"
           client.query(queryString, [data.bet.match_id], function(err, result){
             if(err){
               console.log(err)
@@ -181,7 +191,7 @@ var streamView = io
         }
         else{
           console.log(result.rows)
-          if(result.rows.length > 0){
+          if(result.rows.length > 0 && data.user){
             socket.emit('sendRecentMatch', result.rows[0])
           var queryString = "select * from test.bets where match_id = $1 and user_id = $2 order by id desc"
           console.log(result.rows[0]['id'], data.user)
@@ -198,7 +208,7 @@ var streamView = io
             }
           })
 
-          var queryString = "select * from test.bets where match_id = $1 order by id desc"
+          var queryString = "select *, username from test.bets join test.users on test.bets.user_id = test.users.id where match_id = $1 order by test.bets.id desc"
           client.query(queryString, [result.rows[0]['id']], function(err, result){
             if(err){
               console.log(err);
@@ -212,136 +222,6 @@ var streamView = io
       })
     })
   })
-
-/*var main = io.on('connection', function (socket) {
-  console.log("Here")
-    var queryString = "select * from test.match order by id desc";
-    client.query(queryString, function(err, result){
-      if(err){
-        console.log(err)
-      }
-      else{
-        console.log("here")
-        socket.emit('currentBet', result.rows[0])
-        var queryString = "select b.*, u.username from test.bets b join test.users u on b.user_id = u.id where match_id = $1"
-        client.query(queryString, [result.rows[0]['id']], function(err, results){
-          if(err){
-            console.log(err)
-          }else{
-            socket.emit('currentBets', {"bets":results.rows})
-          }
-        })
-      }
-    })
-    socket.on('submitWinner', function(data){
-      console.log(data)
-      var queryString = "update test.match set winner = $1, active = false where id = $2 returning *";
-      client.query(queryString, [data.player, data.match_id], function(err, result){
-        if(err){
-          console.log(err);
-        }else{
-          var opponentOdds;
-          if(data.player == 0){
-            opponentOdds = 2;
-          }else{
-            opponentOdds = 1;
-          }
-          var queryString = "update test.users set money = money + ((select sum(b.amount) from test.bets b where b.match_id = $1 and b.user_id = test.users.id and b.player_id = $2) * case when (select odds[$3] from test.match m where m.id = $1) = 0 then 2 else (2 + (select odds[$3] from test.match m where m.id = $1) - 1.00) end)"
-          client.query(queryString, [data.match_id, data.player + 1, opponentOdds], function(err, result){
-            if(err){
-              console.log(err);
-            }else{
-
-            }
-          })
-          io.emit('matchClosed', result.rows[0])
-        }
-      })
-    })
-  socket.on('closeMatch', function(data){
-    io.emit('remaining_time', {remaining_time: 0})
-      console.log("Ending Betting")
-        var queryString = "update test.match set remaining_time = 0, active = false where id = $1 returning *"
-        client.query(queryString, [data.match_id], function(err, result){
-          if(err){
-            console.log(err)
-          }else{
-            io.emit('bettingClosed', result.rows[0])
-          }
-        })
-        if(interval){
-          clearInterval(interval);
-        }
-  })
-  socket.on('saveNewMatch', function(data){
-    var queryString = "insert into test.match (active, remaining_time, players, game, totals, odds) values ($1, $2, $3, $4, ARRAY[0,0], ARRAY[1,1]) returning id";
-    client.query(queryString, [data.active, data.remaining_time, data.players, data.game], function(err, result){
-      if(err){
-        console.log(err)
-      }else{
-        var gameObject = {
-          id: result.rows[0]['id'],
-          remaining_time: data.remaining_time,
-          active: data.active,
-          players: data.players,
-          game: data.game
-        }
-        console.log(gameObject)
-        io.emit('startNewMatch', gameObject)
-        if(typeof interval !== 'undefined'){
-          clearInterval(interval);
-        }
-        interval = setInterval(countDown, 1000, gameObject);
-      }
-    })
-  })
-
-  socket.on('askUserInfo', function(data){
-    var queryString = "select * from test.users where id = $1";
-    client.query(queryString, [data.user],function(err, result){
-      socket.emit('sendUserInfo',{user:result.rows})
-    })
-  })
-  socket.on('my other event', function (data) {
-    console.log("Wow")
-    console.log(data)
-    var queryString = "insert into test.bets (user_id, amount, match_id, player_id) values ($1, $2, $3, $4)"
-    client.query(queryString, data.betData, function(err, result){
-      var queryString = "select username, amount, player_id from test.bets b join test.match m on b.match_id = m.id join test.users u on b.user_id = u.id where match_id = $1 and player_id = $2 order by b.id desc";
-      client.query(queryString, [data.betData[2], data.betData[3]],function(err, result){
-        io.emit('news',{bets:result.rows});
-        var queryString = "update test.users set money = money - $1 where id = $2 returning money"
-        client.query(queryString, [data.betData[1], data.betData[0]], function(err, result){
-          if(err){
-            console.log(err)
-          }else{
-            console.log("Money Updated")
-            socket.emit('updatedMoney',{
-              money:result.rows[0]['money']
-            })
-            queryString = "update test.match set totals[$1] = case when totals[$1] is NULL then $2 else totals[$1] + $2 end where id = $3 returning *"
-            client.query(queryString, [data.betData[3], data.betData[1], data.betData[2]], function(err, result){
-              if(err){
-                console.log(err)
-              }else{
-                var queryString = "update test.match set odds[1] = round((totals[1]/(case when least(totals[1], totals[2]) = cast(0 as numeric) then 1 else least(totals[1], totals[2]) end)),2), odds[2] = round((totals[2]/(case when least(totals[1], totals[2]) = cast(0 as numeric) then 1 else least(totals[1], totals[2]) end)),2) where id = $1 returning *"
-                client.query(queryString, [data.betData[2]], function(err, result){
-                  if(err){
-                    console.log(err)
-                  }else{
-                    io.emit('updatedTotals', result.rows[0])
-                  }
-                })
-                //var player1Odds = Math.round((player1TotalBets/Math.min(player1TotalBets, player2TotalBets)) * 100) / 100
-              }
-            })
-          }
-        })
-      })
-    })
-  })
-  //console.log(socket);
-});*/
 
 /**
  * Listen on provided port, on all network interfaces.
