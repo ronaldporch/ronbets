@@ -82,7 +82,7 @@ app.controller('SignInController', ['Auth', '$scope', '$http', '$location', func
       })
   }
 }])
-app.controller('RegisterController', ['$scope', '$http',function($scope, $http){
+app.controller('RegisterController', ['$scope', '$http', '$location', function($scope, $http, $location){
   $scope.user = {}
   $scope.register = function(){
     $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
