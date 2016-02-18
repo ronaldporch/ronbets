@@ -74,7 +74,7 @@ app.controller('UsersController', ['$scope', function($scope){
   
 }])
 app.controller('SignInController', ['Auth', '$scope', '$http', '$location', function(Auth, $scope, $http, $location){
-  $scope.server = ($location.$$host == "localhost") ? "http://localhost:3000/" : $location.$$host;
+  $scope.server = ($location.$$host == "localhost") ? "localhost:3000" : $location.$$host;
   $scope.signIn = function(){
     $http.post("http://" + $scope.server + '/api/auth/sign_in', $scope.user)
       .then(function(res){

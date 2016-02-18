@@ -8,7 +8,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     var socket = io(server, {'forceNew': true});
     socket.emit('getRecentMatch', {
         streamer: $scope.streamer,
-        user: $scope.user.id,
+        user: $scope.user.id
     })
     socket.on('sendRecentMatch', function(data){
       $scope.$apply(function(){
@@ -110,8 +110,20 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
                 width: document.getElementById('stream-view').offsetWidth - 30,
                 height: (document.getElementById('stream-view').offsetWidth - 30) / 1.777
             }
-        $scope.streamUrl = $sce.trustAsResourceUrl("http://player.twitch.tv/?channel=" +  $scope.streamer.stream_name);
-        $scope.chatUrl = $sce.trustAsResourceUrl("http://twitch.tv/" + $scope.streamer.stream_name + "/chat?popout=true");
+        var streamServiceUrl = $scope.streamer.stream_service == 'twitch' ? "http://player.twitch.tv/?channel=" : "http://hitbox.tv/#!/embed/"
+        var chatServiceUrl = ""
+        if($scope.streamer.chat_service == "stream"){
+            console.log("stream chat")
+            if($scope.streamer.stream_service == "twitch"){
+                chatServiceUrl = "http://twitch.tv/" + $scope.streamer.stream_name + "/chat?popout=true"
+            }else{
+                chatServiceUrl = "http://www.hitbox.tv/embedchat/" + $scope.streamer.stream_name
+            }
+        }else{
+            chatServiceUrl = ""
+        }
+        $scope.streamUrl = $sce.trustAsResourceUrl(streamServiceUrl +  $scope.streamer.stream_name);
+        $scope.chatUrl = $sce.trustAsResourceUrl(chatServiceUrl);
       })
     })
     $(window).resize(function(){

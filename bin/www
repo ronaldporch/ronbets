@@ -8,8 +8,8 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-var conString = process.env.DATABASE_URL
+var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = process.env.DATABASE_URL
 console.log(conString)
 /**
  * Get port from environment and store in Express.
@@ -37,7 +37,7 @@ var countDown = function(data){
     if(err){
       console.log(err);
     }else{
-      data.socketIO.to(data.stream_name).emit('remaining_time', {remaining_time: result.rows[0]['remaining_time']})
+      data.socketIO.to(data.streamer).emit('remaining_time', {remaining_time: result.rows[0]['remaining_time']})
       if(result.rows[0]['remaining_time'] == 0){
         console.log("Ending Betting")
           var queryString = "update test.matches set remaining_time = 0, betting = false where id = $1 returning *"
@@ -45,10 +45,9 @@ var countDown = function(data){
             if(err){
               console.log(err)
             }else{
-              data.socketIO.to(data.stream_name).emit('bettingClosed', result.rows[0])
-              console.log(data.stream_name)
-              clearInterval(interval[data.stream_name]);
-              delete interval[data.stream_name]
+              data.socketIO.to(data.streamer).emit('bettingClosed', result.rows[0])
+              clearInterval(interval[data.streamer]);
+              delete interval[data.streamer]
             }
           })
       }
@@ -134,17 +133,18 @@ var streamView = io
           var gameObject = {
             match: result.rows[0],
             socketIO: streamView,
-            stream_name: data.stream_name
+            stream_name: data.stream_name,
+            streamer: data.streamer
           }
           streamView.to(data.stream_name).emit('startNewMatch', result.rows[0])
           socket.emit('latestMatch', result.rows[0])
           
-          if(typeof interval[data.stream_name] !== 'undefined'){
-            clearInterval(interval[data.stream_name]);
+          if(typeof interval[data.streamer] !== 'undefined'){
+            clearInterval(interval[data.streamer]);
           }
             data.socketIO = streamView
             //setBetCountDown(gameOb)
-            interval[data.stream_name] = setInterval(countDown, 1000, gameObject);
+            interval[data.streamer] = setInterval(countDown, 1000, gameObject);
           }
 
       })
@@ -191,9 +191,10 @@ var streamView = io
         }
         else{
           console.log(result.rows)
-          if(result.rows.length > 0 && data.user){
+          if(result.rows.length > 0){
             socket.emit('sendRecentMatch', result.rows[0])
-          var queryString = "select * from test.bets where match_id = $1 and user_id = $2 order by id desc"
+            if(data.user){
+              var queryString = "select * from test.bets where match_id = $1 and user_id = $2 order by id desc"
           console.log(result.rows[0]['id'], data.user)
           client.query(queryString, [result.rows[0]['id'], data.user], function(err, result){
             if(err){
@@ -207,6 +208,7 @@ var streamView = io
               }
             }
           })
+            }
 
           var queryString = "select *, username from test.bets join test.users on test.bets.user_id = test.users.id where match_id = $1 order by test.bets.id desc"
           client.query(queryString, [result.rows[0]['id']], function(err, result){

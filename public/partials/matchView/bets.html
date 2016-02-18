@@ -1,7 +1,7 @@
 <div ng-show="currentMatch">
   <div class="col-md-12">
-    <div class="alert alert-danger" role="alert">
-        <p class="text-center time"><b>{{currentMatch.timer.minute}}:<span ng-show="currentBet.remaining_time % 60 < 10">0</span>{{currentMatch.remaining_time % 60}}</b></p>
+    <div class="alert" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
+        <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
     </div>
   </div>
   <div ng-show="!currentMatch.betting || user.currentBet || !isLoggedIn">

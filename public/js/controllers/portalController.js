@@ -31,6 +31,7 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
   	socket.emit('sendNewMatch', {
   		streamer_id: $scope.user.id,
   		stream_name: $scope.user.stream_name,
+      streamer: $scope.user.username,
   		players: $scope.players,
   		remaining_time: $scope.remaining_time
   	})
