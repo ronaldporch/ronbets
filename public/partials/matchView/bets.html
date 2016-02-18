@@ -1,59 +1,52 @@
 <div ng-show="currentMatch">
   <div class="col-md-12">
-    <div class="alert" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
+    <div ng-hide="currentMatch.playing || currentMatch.winner" class="alert bet-timer" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
         <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
     </div>
   </div>
   <div ng-show="!currentMatch.betting || user.currentBet || !isLoggedIn">
     <div class="col-sm-6">
-      <table class="table table-striped">
-        <tr>
-          <th class="">{{currentMatch.players[0].name}} 
-            <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet1 = true" ng-show="currentBet.active">Bet</button>
-            <form class="form-inline" ng-show="showBet1" ng-submit="closeBet(1)">
-              <div class="form-group">
-                <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">$</div>
-                    <input type="number" class="form-control" id="exampleInputAmount" max="{{user.money}}" min="0" placeholder="Amount" ng-model="player1Bet" required>
-                </div>
-              </div>
-            </form>
-          </th>
-        </tr>
+      <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 1), 'panel-default':(currentMatch.winner != 1)}">
+        <div class="panel-heading text-center"><strong>{{currentMatch.players[0].name}}</strong></div>
+        <div class="panel-body" ng-hide="currentBets[0].length > 0">
+          
+        <p class="text-center">No Bets!</p>
+        </div>
+        <table class="table table-hover" ng-show="currentBets[0].length > 0">
         <tr ng-repeat="bets in currentBets[0]">
-          <td>{{bets.amount}} <small>{{bets.username}}<small></td>
+          <td><img src="http://www.gravatar.com/avatar/9f03cd93b58e9a49c715515fdb3d492d" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{bets.amount}}</td>
         </tr>
       </table>
+      </div>
     </div>
 
     <div class="col-sm-6">
-      <table class="table table-striped">
-        <tr>
-          <th class="align-center">{{currentMatch.players[1].name}}
-            <button type="button" class="btn btn-default btn-sm text-right" ng-click="showBet2 = true" ng-show="currentBet.active">Bet</button>
-            <form class="form-inline" ng-show="showBet2" ng-submit="closeBet(2)">
-              <div class="form-group">
-                <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
-                <div class="input-group">
-                  <div class="input-group-addon">$</div>
-                  <input type="number" class="form-control" id="exampleInputAmount" placeholder="Amount" max="{{user.money}}" min="0" ng-model="player2Bet" required>
-                </div>
-              </div>
-            </form>
-          </th>
-        </tr>
+      <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 2), 'panel-default':(currentMatch.winner != 2)}">
+        <div class="panel-heading text-center"><strong>{{currentMatch.players[1].name}}</strong></div>
+      <div class="panel-body" ng-hide="currentBets[1].length > 0">
+        
+      <p class="text-center">No Bets!</p>
+      </div>
+      <table class="table table-hover" ng-show="currentBets[1].length > 0">
         <tr ng-repeat="bets in currentBets[1]">
-          <td>{{bets.amount}} <small>{{bets.username}}<small></td>
+          <td><img src="http://www.gravatar.com/avatar/9f03cd93b58e9a49c715515fdb3d492d" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{bets.amount}}</td>
       </table>
+      </div>
     </div>
   </div>
-  <div ng-hide="!currentMatch.betting || user.currentBet || !isLoggedIn">
-    <button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary btn-lg" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
+  <div ng-hide="!currentMatch.betting || user.currentBet || !isLoggedIn" class="text-center">
+    <button ng-repeat="player in currentMatch.players track by $index" ng-class="{'active':user.bet.player == $index + 1}" class="btn btn-info btn-lg player-bet" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
     <div ng-show="user.bet.player">
-      <input type="number" class="" ng-model="user.bet.amount" min="0" max="{{user.wallet}}">
-      <button ng-click="submitBet()">Submit Bet</button>
-      <button ng-click="cancelBet()">Cancel Bet</button>
+      <form ng-submit="submitBet()">
+        <div class="input-group input-group-lg col-xs-3">
+          <span class="input-group-addon">$</span>
+          <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet}}">
+          <span class="input-group-addon">.00</span>
+        </div>
+          <button type="submit">Submit Bet</button>
+          <button ng-click="cancelBet()">Cancel Bet</button>
+      </form>
+        </div>
     </div>
   </div>
 
@@ -62,3 +55,12 @@
 <div ng-hide="currentMatch">
   No Matches Played on this stream!
 </div>
+
+<style type="text/css">
+  .player-bet {
+    margin: 0 10px;
+  }
+  .bet-timer {
+    border-radius: 0px;
+  }
+</style>

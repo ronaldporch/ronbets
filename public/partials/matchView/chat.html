@@ -1,3 +1,13 @@
 <div>
-	<iframe frameborder="0" scrolling="no" src="{{url}}" height="{{chatHeight}}" width="{{chatWidth}}"></iframe>
+	<iframe id="chat-window" frameborder="0" scrolling="no" src="{{url}}" height="{{chatHeight}}" width="{{chatWidth}}"></iframe>
+	<style type="text/css">
+	#chat-window {
+		max-width: 750px; max-height: 422px;
+	}
+	@media only screen and (max-width: 768px) {
+		#chat-window {
+			max-width: 640px; max-height: 360px;
+		}
+	}
+	</style>
 </div>

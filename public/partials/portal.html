@@ -1,10 +1,32 @@
-<form>
-  <input type="text" placeholder="player1" ng-model="players[0].name">
-  <input type="text" placeholder="player2" ng-model="players[1].name">
-  <input type="number" placeholder="time" ng-model="remaining_time">
-  <input type="text" placeholder="game" ng-model="currentMatch.game">
-  <button ng-click="sendNewMatch()">Start</button>
+<div class="container-fluid">
+  <div class="col-md-12">
+    <form class="form-inline" ng-submit="sendNewMatch()" ng-show="!currentMatch || currentMatch.winner">
+  <div class="row">
+    <div class="input-group">
+      <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+      <input class="form-control" type="text" placeholder="Player 1" ng-model="newMatch.players[0].name">
+    </div>
+    <div class="input-group">
+      <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+      <input class="form-control" type="text" placeholder="Player 2" ng-model="newMatch.players[1].name">
+    </div>
+  </div>
+  <div class="row">
+    <div class="input-group">
+    <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span></span>
+    <input class="form-control" type="number" placeholder="Allotted Betting Time (In Seconds)" ng-model="newMatch.remaining_time">
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon"><span class="glyphicon glyphicon-modal-window"></span></span>
+    <input class="form-control" type="text" placeholder="Game" ng-model="newMatch.game">
+  </div>
+  <button class="btn btn-primary" type="submit">Start</button>
+  </div>
+  
 </form>
-  {{match}}
-<button ng-click="closeBetting()">Close Betting</button>
-<button ng-repeat="player in players track by $index" ng-click="submitWinner($index + 1)">{{player}}</button>
+  </div>
+  {{currentMatch}}
+<button ng-click="closeBetting()" class="btn btn-danger" ng-show="currentMatch.betting">Close Betting</button>
+<button ng-click="startPlaying()" class="btn btn-primary" ng-show="!currentMatch.betting && !currentMatch.playing && !currentMatch.winner">Start Playing</button>
+<button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary" ng-show="currentMatch.playing" ng-click="submitWinner($index + 1)">{{player.name}}</button>
+</div>

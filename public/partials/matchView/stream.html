@@ -1,3 +1,13 @@
 <div>
-	<iframe src="{{url}}" id="screen" width="{{streamWidth}}" height="{{streamHeight}}" allowfullscreen></iframe>
+	<iframe frameborder="0" id="stream-window" src="{{url}}" id="screen" width="{{streamWidth}}" height="{{streamHeight}}" allowfullscreen></iframe>
+	<style type="text/css">
+	#stream-window {
+		max-width: 750px; max-height: 422px;
+	}
+	@media only screen and (max-width: 768px) {
+		#stream-window {
+			max-width: 640px; max-height: 360px;
+		}
+	}
+	</style>
 </div>

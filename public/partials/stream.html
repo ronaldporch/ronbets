@@ -1,5 +1,5 @@
-<div class="alert marquee" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
-    <marquee ng-if="currentMatch.betting">
+<div ng-hide="currentMatch.playing || currentMatch.winner" class="alert marquee" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
+      <marquee ng-if="currentMatch.betting">
       Next Match for 
       <strong>{{currentMatch.game}}</strong>: <strong>{{currentMatch.players[0].name}}</strong> vs <strong>{{currentMatch.players[1].name}}. </strong>
       <span ng-hide="currentMatch.remaining_time <= 9">Place your bets!</span>
@@ -9,11 +9,11 @@
     <marquee ng-if="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
   </div> 
 	<div class="container-fluid">
-    <div class="col-md-5" id="stream-view">
+    <div class="col-md-6 text-center" id="stream-view">
       <stream url="streamUrl" stream-height="stream.height" stream-width="stream.width"></stream>
       <chat url="chatUrl" chat-height="stream.height" chat-width="stream.width"></chat>
     </div>
-    <div class="col-md-7">
+    <div class="col-md-6">
       <div class="row">
         <div ng-include src="'partials/matchView/bets.html'"></div>
       </div>

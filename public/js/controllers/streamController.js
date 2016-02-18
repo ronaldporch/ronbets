@@ -15,6 +15,11 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.currentMatch = data;
       })
     })
+    socket.on('playingMatch', function(data){
+        $scope.$apply(function(){
+            $scope.currentMatch = data;
+        })
+    })
     $scope.$on('$destroy', function(){
         socket.emit('leaveRoom', {
             streamer: $scope.streamer

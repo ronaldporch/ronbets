@@ -8,8 +8,8 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
-//var conString = process.env.DATABASE_URL
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 console.log(conString)
 /**
  * Get port from environment and store in Express.
@@ -63,7 +63,7 @@ var streamView = io
       socket.leave(data.streamer.username)
     })
     socket.on('submitWinner', function(data){
-      var queryString = "update test.matches set winner = $1, closed = true where id = $2 returning *";
+      var queryString = "update test.matches set winner = $1, closed = true, playing = false where id = $2 returning *";
       console.log('match id: ', data.currentMatch.id)
       client.query(queryString, [data.winner, data.currentMatch.id], function(err, result){
         if(err){
@@ -78,7 +78,7 @@ var streamView = io
             odds = 1
           }
           var queryString = "update test.users set wallet = wallet + ((select amount from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id) * case when CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as integer) = 0 then 2 else (1 + CAST((select players[$3] ->> 'odds' from test.matches where test.matches.id = $1) as numeric)) end) from test.bets where match_id = $1 and player_id = $2 and user_id = test.users.id returning *";
-          client.query(queryString, [data.currentMatch.id, data.winner, odds], function(err){
+          client.query(queryString, [data.currentMatch.id, data.winner, odds], function(err, result){
             if(err){
               console.log(err)
             }else{
@@ -90,6 +90,16 @@ var streamView = io
     })
     socket.on('disconnect', function(data){
       console.log('disconnected from: ')
+    })
+    socket.on('startPlaying', function(data){
+      var queryString = "update test.matches set playing = true where id = $1 returning *"
+      client.query(queryString, [data.currentMatch.id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          streamView.to(data.stream_name).emit('playingMatch', result.rows[0])
+        }
+      })
     })
     socket.on('getStreamInfo', function(data){
       socket.join(data.streamer)
@@ -113,7 +123,7 @@ var streamView = io
       })
     })
     socket.on('getConnection', function(data){
-      socket.join(data.user.stream_name)
+      socket.join(data.user.username)
       console.log("Admin coming in")
       var queryString = "select * from test.matches where streamer_id = $1 order by id desc limit 1"
       client.query(queryString, [data.user.id], function(err, result){
