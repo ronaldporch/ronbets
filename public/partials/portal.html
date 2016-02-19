@@ -1,4 +1,9 @@
-<div class="container-fluid">
+<div class="container">
+  <div class="col-md-12">
+    <h2>
+    Match #{{currentMatch.id}}: <span ng-repeat="player in currentMatch.players">{{player.name}} <span ng-hide="$index + 1 == currentMatch.players.length">vs </span></span>
+  </h2>
+  </div>
   <div class="col-md-12">
     <form class="form-inline" ng-submit="sendNewMatch()" ng-show="!currentMatch || currentMatch.winner">
   <div class="row">
@@ -25,7 +30,6 @@
   
 </form>
   </div>
-  {{currentMatch}}
 <button ng-click="closeBetting()" class="btn btn-danger" ng-show="currentMatch.betting">Close Betting</button>
 <button ng-click="startPlaying()" class="btn btn-primary" ng-show="!currentMatch.betting && !currentMatch.playing && !currentMatch.winner">Start Match</button>
 <button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary" ng-show="currentMatch.playing" ng-click="submitWinner($index + 1)">{{player.name}}</button>

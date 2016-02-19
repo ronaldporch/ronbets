@@ -16,6 +16,9 @@ app.factory('Auth', ['$window', function($window){
 			return false;
 		}
 	}
+	o.signOut = function(){
+		$window.localStorage.removeItem('casinoNight-token')
+	}
 	o.currentUser = function(){
 		if(this.isLoggedIn()){
 			var token = this.getToken();

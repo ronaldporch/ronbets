@@ -4,7 +4,8 @@ var app = angular.module('CasinoNight', [
   'CasinoNight.portal', 
   'CasinoNight.chatDirective',
   'CasinoNight.streamDirective',
-  'CasinoNight.authService'
+  'CasinoNight.authService',
+  'angular-md5'
 ])
 app.run(['$state', '$rootScope', '$location', 'Auth', function($state, $rootScope, $location, Auth){
   $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
@@ -20,6 +21,11 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
       url: "/",
       templateUrl: 'partials/home.html',
       controller: 'HomeController'
+    })
+    .state('dashboard', {
+      url: "/dashboard",
+      templateUrl: 'partials/dashboard.html',
+      controller: 'DashboardController'
     })
     .state('users', {
       url: "/users",
@@ -70,15 +76,19 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
 app.controller('HomeController', ['$scope', function($scope){
 
 }])
+app.controller('DashboardController', ['$scope', function($scope){
+
+}])
 app.controller('UsersController', ['$scope', function($scope){
   
 }])
-app.controller('SignInController', ['Auth', '$scope', '$http', '$location', function(Auth, $scope, $http, $location){
+app.controller('SignInController', ['Auth', '$scope', '$http', '$location', '$state', function(Auth, $scope, $http, $location, $state){
   $scope.server = ($location.$$host == "localhost") ? "localhost:3000" : $location.$$host;
   $scope.signIn = function(){
     $http.post("http://" + $scope.server + '/api/auth/sign_in', $scope.user)
       .then(function(res){
         Auth.saveToken(res.data.token)
+        $state.go('dashboard')
       })
   }
 }])
@@ -119,6 +129,13 @@ app.controller('GamesController', ['$scope', '$stateParams', function($scope, $s
 app.controller('GameController', ['$scope', '$stateParams', function($scope, $stateParams){
   $scope.game = $stateParams.game.replace(/-/g, " ")
 }])
-app.controller('AdminController', ['$scope', 'Auth', function($scope, Auth){
+app.controller('AdminController', ['$scope', 'Auth', '$rootScope', '$state', function($scope, Auth, $rootScope, $state){
   $scope.user = Auth.getToken()
+  $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
+    $scope.user = Auth.getToken()
+  })
+  $scope.signOut = function(){
+    Auth.signOut()
+    $state.go('home')
+  }
 }])
