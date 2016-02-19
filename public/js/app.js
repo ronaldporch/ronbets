@@ -1,20 +1,18 @@
 var app = angular.module('CasinoNight', [
   'ui.router', 
-  'CasinoNight.stream', 
-  'CasinoNight.portal', 
-  'CasinoNight.chatDirective',
-  'CasinoNight.streamDirective',
-  'CasinoNight.authService',
+  'CasinoNight.services',
+  'CasinoNight.controllers', 
+  'CasinoNight.directives',
   'angular-md5'
 ])
 app.run(['$state', '$rootScope', '$location', 'Auth', function($state, $rootScope, $location, Auth){
   $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
     if(fromState.name == "stream"){
-      console.log($state.params.streamer)
+      
     }
   })
 }])
-app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $stateProvider){
+app.config(['$urlRouterProvider', '$stateProvider', '$httpProvider', function($urlRouterProvider, $stateProvider, $httpProvider){
   $urlRouterProvider.otherwise('/')
   $stateProvider
     .state('home', {
@@ -31,6 +29,16 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
       url: "/users",
       templateUrl: 'partials/users.html',
       controller: 'UsersController'
+    })
+    .state('events', {
+      url: "/events",
+      templateUrl: 'partials/events/index.html',
+      controller: 'EventsController'
+    })
+    .state('new_event', {
+      url: "/events/new",
+      templateUrl: 'partials/events/new.html',
+      controller: 'NewEventController'
     })
     .state('user', {
       url: "/users/{user}",
@@ -52,6 +60,11 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
       templateUrl: "partials/stream.html",
       controller: "StreamController"
     })
+    .state('settings', {
+      url: "/settings",
+      templateUrl: "partials/settings.html",
+      controller: "SettingsController"
+    })
     .state('portal', {
       url: "/portal",
       templateUrl: "partials/portal.html",
@@ -72,70 +85,4 @@ app.config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider,
       templateUrl: "partials/activate.html",
       controller: "ActivationController"
     })
-}])
-app.controller('HomeController', ['$scope', function($scope){
-
-}])
-app.controller('DashboardController', ['$scope', function($scope){
-
-}])
-app.controller('UsersController', ['$scope', function($scope){
-  
-}])
-app.controller('SignInController', ['Auth', '$scope', '$http', '$location', '$state', function(Auth, $scope, $http, $location, $state){
-  $scope.server = ($location.$$host == "localhost") ? "localhost:3000" : $location.$$host;
-  $scope.signIn = function(){
-    $http.post("http://" + $scope.server + '/api/auth/sign_in', $scope.user)
-      .then(function(res){
-        Auth.saveToken(res.data.token)
-        $state.go('dashboard')
-      })
-  }
-}])
-app.controller('RegisterController', ['$scope', '$http', '$location', function($scope, $http, $location){
-  $scope.user = {}
-  $scope.register = function(){
-    $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
-    $http.post("http://" + $scope.server + '/api/auth/register', $scope.user)
-    .then(function(res){
-    })
-  }
-}])
-app.controller('ActivationController', ['$scope', '$stateParams', '$http', '$location', function($scope, $stateParams, $http, $location){
-  $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
-  $scope.getUser = function(){
-    $scope.user = {}
-    $http.get("http://" + $scope.server + '/api/auth/getUser/' + $stateParams.id)
-      .then(function(res){
-        $scope.user.username = res.data.username
-        $scope.user.id = res.data.id
-        $scope.user.streamService = "none"
-        $scope.user.chatService = "stream"
-      })
-  }
-  $scope.activateUser = function(){
-    $http.post("http://" + $scope.server + '/api/auth/activate', $scope.user)
-      .then(function(res){
-      })
-  }
-  $scope.getUser()
-}])
-app.controller('UserController', ['$scope', '$stateParams', function($scope, $stateParams){
-  $scope.user = $stateParams.user
-}])
-app.controller('GamesController', ['$scope', '$stateParams', function($scope, $stateParams){
-  
-}])
-app.controller('GameController', ['$scope', '$stateParams', function($scope, $stateParams){
-  $scope.game = $stateParams.game.replace(/-/g, " ")
-}])
-app.controller('AdminController', ['$scope', 'Auth', '$rootScope', '$state', function($scope, Auth, $rootScope, $state){
-  $scope.user = Auth.getToken()
-  $rootScope.$on('$stateChangeStart', function(e, toState, toParams, fromState, fromParams){
-    $scope.user = Auth.getToken()
-  })
-  $scope.signOut = function(){
-    Auth.signOut()
-    $state.go('home')
-  }
 }])

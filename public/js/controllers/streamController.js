@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight.stream', [])
+var app = angular.module('CasinoNight.controllers')
 app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', function($scope, $stateParams, $sce, $location, Auth){
   $scope.isLoggedIn = Auth.isLoggedIn()
   $scope.streamer = $stateParams.params.streamer;

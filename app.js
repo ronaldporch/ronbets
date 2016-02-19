@@ -6,9 +6,10 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var passport = require('passport');
+var request = require('request');
 require('./config/passport.js')
 
-var routes = require('./routes/index');
+var challonge = require('./routes/index');
 var users = require('./routes/users');
 var auth = require('./routes/auth');
 
@@ -27,8 +28,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+app.use('/api/challonge/tournaments?', function(req, res, next) {
+  var apiKey = encodeURIComponent(req.query.apiKey);
+  var userName = encodeURIComponent(req.query.userName);
+  var challongeUrl = "http://" + userName +":" + userName + "@api.challonge.com/v1/tournaments.json"
+  req.pipe(request(challongeUrl)).pipe(res);
+});
+
+app.use('/api/users', users);
 app.use('/api/auth', auth)
 
 // catch 404 and forward to error handler

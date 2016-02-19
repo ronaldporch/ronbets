@@ -27,6 +27,8 @@ auth.generateJWT = function(user){
 		chat_service: user.chat_service,
 		chatango: user.chatango,
 		wallet: user.wallet,
+		challonge_key: user.challonge_key,
+		email: user.email,
 		exp: parseInt(exp.getTime() / 1000)
 	}, new Buffer('SECRET', 'base64'))
 }

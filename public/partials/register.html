@@ -1,6 +1,7 @@
 <form ng-submit="register()">
 	<input ng-model="user.username">
 	<input ng-model="user.email">
-	<input ng-model="user.password">
+	<input type="password" ng-model="user.password">
+	<input type="password" ng-model="user.confirmPassword">
 	<button type="submit">Register</button>
 </form>

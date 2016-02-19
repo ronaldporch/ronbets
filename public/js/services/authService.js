@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight.authService', [])
+var app = angular.module('CasinoNight.services')
 app.factory('Auth', ['$window', function($window){
 	var o = {}
 	o.saveToken = function(token){

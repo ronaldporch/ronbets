@@ -11,7 +11,7 @@ var transporter = nodemailer.createTransport({
 	service: 'Gmail',
 	auth: {
 		user: 'dada5714@gmail.com',
-		pass: 'projectRose1'
+		pass: 'ProjectRose1'
 	}
 })
 
@@ -20,7 +20,9 @@ router.post('/register', function(req, res, next){
 		return res.status(400).json({message: 'Please fill out all fields'})
 	}
 
-	if(!(req.body.password != req.body.confirmPassword)){
+	if(req.body.password != req.body.confirmPassword){
+		console.log(req.protocol)
+		console.log(req.get('host'))
 		return res.status(400).json({message: 'Passwords don\'t match'})
 	}
 
@@ -36,7 +38,7 @@ router.post('/register', function(req, res, next){
 		if(err){
 			return console.error('error fetching client from pool', err);
 		}
-		client.query('insert into test.users (username, email, hash, salt) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar) returning *', user, function(err, result){
+		client.query('insert into test.users (username, email, hash, salt, user_active) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar, false) returning *', user, function(err, result){
 				done();
 				if(err){
 					console.log(err)
@@ -44,11 +46,11 @@ router.post('/register', function(req, res, next){
 				}
 				var user = result.rows[0]
 				var mailOptions = {
-					from: 'Ronald Porch <dada5714@gmail.com>',
+					from: 'Casino Night <dada5714@gmail.com>',
 					to: user.email,
 					subject: 'Registered for Casino Night',
-					text: 'Hello, ' + user.username + '. You registered for Casino Nights. Please go to localhost:3000/#/activate/' + user.id + ' to activate your account.',
-					html: '<h2>Hello ' + user.username + '.</h2> <p>You registered for Casino Night. Follow <a href="localhost:3000/#/activate/' + user.id + '">this link</a> to confirm your account</p><br><small>Link isn\'t working? localhost:3000/#/activate/' + user.id + '</small>'
+					text: 'Hello, ' + user.username + '. You registered for Casino Nights. Please go to ' + req.protocol + '://' + req.get('host') + '/#/activate/' + user.id + ' to activate your account.',
+					html: '<h2>Hello ' + user.username + '.</h2> <p>You registered for Casino Night. Follow <a href="' + req.protocol + '://' + req.get('host') + '/#/activate/' + user.id + '">this link</a> to confirm your account</p><br><small>Link isn\'t working? ' + req.protocol + '://' + req.get('host') + '/#/activate/' + user.id + '</small>'
 				}
 				transporter.sendMail(mailOptions, function(err, info){
 					if(err){
@@ -94,6 +96,7 @@ router.post('/sign_in', function(req, res, next){
 
 			if(user){
 				if(user.user_active){
+					console.log(user)
 					return res.json({token: auth.generateJWT(user)})
 				}else{
 					return res.status(400).json({error: true, message: 'User has not yet been activated. Please check email for activation.'})
@@ -116,7 +119,7 @@ router.post('/activate', function(req, res, next){
 					if(err){
 						return console.error('error fetching client from pool', err);
 					}
-					var queryString = "update test.users set user_active = true";
+					var queryString = "update test.users set user_active = true, wallet = 1000";
 					var queryData = []
 					queryData.push(user.id)
 					if(req.body.streamService != 'none'){

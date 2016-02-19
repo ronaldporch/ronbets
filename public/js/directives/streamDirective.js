@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight.streamDirective', [])
+var app = angular.module('CasinoNight.directives')
 app.directive('stream', function(){
 	var d = {
 		restrict: 'E',

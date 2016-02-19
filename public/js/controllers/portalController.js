@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight.portal', ['CasinoNight.authService'])
+var app = angular.module('CasinoNight.controllers')
 app.controller('PortalController', ['$scope', 'Auth', '$location', function($scope, Auth, $location){
   console.log($location.$$host)
   var server = $location.$$host == "localhost" ? "localhost:3000/stream" : $location.$$host + "/stream";

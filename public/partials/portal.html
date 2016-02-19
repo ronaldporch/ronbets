@@ -1,5 +1,6 @@
 <div class="container">
   <div class="col-md-12">
+    <h2><a href="/#/stream/{{user.username}}" target="_blank">Go To Stream</a></h2>
     <h2>
     Match #{{currentMatch.id}}: <span ng-repeat="player in currentMatch.players">{{player.name}} <span ng-hide="$index + 1 == currentMatch.players.length">vs </span></span>
   </h2>

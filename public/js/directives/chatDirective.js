@@ -1,4 +1,4 @@
-var app = angular.module('CasinoNight.chatDirective', [])
+var app = angular.module('CasinoNight.directives')
 app.directive('chat', function(){
 	var d = {
 		restrict: 'E',
