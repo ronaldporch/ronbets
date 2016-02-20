@@ -40,6 +40,11 @@ app.config(['$urlRouterProvider', '$stateProvider', '$httpProvider', function($u
       templateUrl: 'partials/events/new.html',
       controller: 'NewEventController'
     })
+    .state('event', {
+      url: "/events/:event_id",
+      templateUrl: 'partials/events/view.html',
+      controller: 'EventViewController'
+    })
     .state('user', {
       url: "/users/{user}",
       templateUrl: "partials/user.html",

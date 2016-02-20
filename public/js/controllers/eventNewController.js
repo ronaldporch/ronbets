@@ -1,12 +1,19 @@
 var app = angular.module('CasinoNight.controllers')
-app.controller('NewEventController', ['$http', '$scope', function($http, $scope){
-	//MglOkMH3lcBjnvKlGcthufy3A4aEhHXFugxbMeRm
-	https://dada5714:MglOkMH3lcBjnvKlGcthufy3A4aEhHXFugxbMeRm@api.challonge.com/v1/tournaments.json
-	var apiKey = "MglOkMH3lcBjnvKlGcthufy3A4aEhHXFugxbMeRm"
-	var userName = "dada5714"
-	var challongeUrl = "http://dada5714:MglOkMH3lcBjnvKlGcthufy3A4aEhHXFugxbMeRm@api.challonge.com/v1/"
-	$http.get("/api/challonge/tournaments?apiKey=" + apiKey + "&userName=" + userName)
+app.controller('NewEventController', ['$http', '$scope', 'Auth', '$state', function($http, $scope, Auth, $state){
+	$scope.event = {}
+	$scope.event.streamer_id = Auth.currentUserPayload().id
+	$scope.event.players = [
+		{},
+		{}
+	]
+	$scope.addPlayer = function(){
+		$scope.event.players.push({})
+	}
+	$scope.submitEvent = function(){
+		$http.post('/api/events/', $scope.event)
 		.then(function(res){
 			console.log(res.data)
+			$state.go('dashboard')
 		})
+	}
 }])

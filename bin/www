@@ -8,8 +8,8 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-var conString = process.env.DATABASE_URL
+var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = process.env.DATABASE_URL
 console.log(conString)
 /**
  * Get port from environment and store in Express.

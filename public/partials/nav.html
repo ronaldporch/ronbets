@@ -15,6 +15,7 @@
         <ul class="nav navbar-nav navbar-right">
           <li ng-hide="user"><a href="/#/sign_in">Sign In</a></li>
           <li ng-hide="user"><a href="/#/register">Register</a></li>
+          <li ng-show="user"><a href="/#/dashboard">Dashboard</a></li>
           <li ng-show="user"><a href="/#/portal">Betting Center</a></li>
           <li ng-show="user" ng-click="signOut()"><a href="">Sign Out</a></li>
           <li class="dropdown">
