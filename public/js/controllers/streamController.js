@@ -4,26 +4,14 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
   $scope.streamer = $stateParams.params.streamer;
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
   $scope.user.bet = {}
-  $scope.event = {
-    id: 0,
-    name: "General Betting"
-  }
+
   var server = ($location.$$host == "localhost") ? "localhost:3000" + "/stream" : $location.$$host + "/stream"
     var socket = io(server, {'forceNew': true});
-    socket.emit('getRecentMatch', {
-        streamer: $scope.streamer,
-        user: $scope.user.id
+
+    socket.emit('getStreamInfo', {
+        streamer: $scope.streamer
     })
-    socket.on('getCurrentEvent', function(data){
-        $scope.$apply(function(){
-            $scope.event = data.event
-        })
-    })
-    socket.on('sendRecentMatch', function(data){
-      $scope.$apply(function(){
-        $scope.currentMatch = data;
-      })
-    })
+
     socket.on('playingMatch', function(data){
         $scope.$apply(function(){
             $scope.currentMatch = data;
@@ -56,7 +44,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.$apply(function(){
             $scope.currentMatch = data
             $scope.currentBets = [[],[]]
-            $scope.user.currentBet = undefined
+            $scope.user.hasBet = false;
         })
     })
     socket.on('showWinner', function(data){
@@ -77,8 +65,34 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             })
         })
     }
-
-    socket.on('remaining_time', function(data){
+    socket.on('checkForEntryUpdates', function(){
+      socket.emit('getEventEntry', {
+        event: $scope.event,
+        user: $scope.user
+      })
+    })
+    socket.on('checkForWalletUpdates', function(){
+      socket.emit('getWallet', {
+        user: $scope.user
+      })
+    })
+    socket.emit('getWallet', {
+      user: $scope.user
+    })
+    socket.on('eventEntry', function(data){
+        $scope.$apply(function(){
+            if(data.entry){
+              $scope.user.inEvent = true
+            }
+            $scope.user.wallet = data.entry.ante
+        })
+    })
+    socket.on('wallet', function(data){
+        $scope.$apply(function(){
+            $scope.user.wallet = data.user.wallet
+        })
+    })
+    socket.on('remainingTime', function(data){
         $scope.$apply(function(){
             $scope.currentMatch.remaining_time = data.remaining_time
         })
@@ -89,32 +103,19 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         })
     })
     socket.on('currentBets', function(data){
-        $scope.$apply(function(){
-          $scope.currentBets = [[],[]]
-        data.forEach(function(value, index, ar){
+      $scope.$apply(function(){
+        $scope.currentBets = [[],[]]
+        data.bets.forEach(function(value, index, ar){
+          if(value.user_id == $scope.user.id){
+            $scope.user.hasBet = true
+          }
           if(value.player_id == 1){
             $scope.currentBets[0].push(value)
           }else if(value.player_id == 2){
             $scope.currentBets[1].push(value)
           }
         })
-        })
-    })
-
-    socket.on('yourBet', function(data){
-        $scope.$apply(function(){
-            $scope.user.currentBet = data
-        })
-    })
-
-    socket.on('yourWallet', function(data){
-        $scope.$apply(function(){
-            if(data.wallet){
-                $scope.user.wallet = data.wallet
-            }else{
-                $scope.user.wallet = data.ante
-            }
-        })
+      })
     })
 
     $scope.submitBet = function(){
@@ -123,7 +124,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         socket.emit('sendBet', {
             bet: $scope.user.bet,
             streamer: $scope.streamer,
-            event_id: $scope.event.id
+            event: $scope.event
         })
         $scope.user.bet = {}
     }
@@ -132,14 +133,34 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.user.bet = {}
     }
 
-    socket.emit('getStreamInfo', {streamer: $scope.streamer})
-    socket.on('sendStreamInfo', function(data){
-      $scope.$apply(function(){
-        $scope.streamer = data;
-            $scope.stream = {
-                width: document.getElementById('stream-view').offsetWidth - 30,
-                height: (document.getElementById('stream-view').offsetWidth - 30) / 1.777
-            }
+    socket.on('currentEvent', function(data){
+        $scope.$apply(function(){
+            $scope.event = data.event
+            socket.emit('getCurrentMatch', {
+                event: $scope.event,
+                streamer: $scope.streamer
+            })
+            socket.emit('getEventEntry', {
+              event: $scope.event,
+              user: $scope.user
+            })
+        })
+    })
+
+    socket.on('currentMatch', function(data){
+        $scope.$apply(function(){
+            $scope.currentMatch = data.match
+            socket.emit('getCurrentBets', {
+                match: $scope.currentMatch
+            })
+        })
+    })
+
+    $scope.setupStream = function(){
+        $scope.stream = {
+            width: document.getElementById('stream-view').offsetWidth - 30,
+            height: (document.getElementById('stream-view').offsetWidth - 30) / 1.777
+        }
         var streamServiceUrl = $scope.streamer.stream_service == 'twitch' ? "http://player.twitch.tv/?channel=" : "http://hitbox.tv/#!/embed/"
         var chatServiceUrl = ""
         if($scope.streamer.chat_service == "stream"){
@@ -154,6 +175,15 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         }
         $scope.streamUrl = $sce.trustAsResourceUrl(streamServiceUrl +  $scope.streamer.stream_name);
         $scope.chatUrl = $sce.trustAsResourceUrl(chatServiceUrl);
+    }
+    
+    socket.on('streamInfo', function(data){
+      $scope.$apply(function(){
+        $scope.streamer = data.streamer
+        socket.emit('getCurrentEvent', {
+            streamer: $scope.streamer
+        })
+        $scope.setupStream()
       })
     })
     $(window).resize(function(){

@@ -5,12 +5,14 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
   var socket = io("http://" + server)
   $scope.user = Auth.currentUserPayload()
   console.log($scope.user)
+
   socket.emit('getConnection', {
-  	user: $scope.user
+  	streamer: $scope.user
   })
-  socket.on('latestMatch', function(data){
+
+  socket.on('currentMatch', function(data){
   	$scope.$apply(function(){
-  		$scope.currentMatch = data
+  		$scope.currentMatch = data.match
   	})
   })
 
@@ -19,14 +21,15 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
     remaining_time: undefined,
     game: undefined
   }
-  $scope.event = {
-    id: 0,
-    name: "General Betting"
-  }
-  socket.on('getCurrentEvent', function(data){
+
+  socket.on('currentEvent', function(data){
     $scope.event = data.event
-    console.log($scope.event)
+    socket.emit('getCurrentMatch', {
+      streamer: $scope.user,
+      event: $scope.event
+    })
   })
+
   $scope.submitWinner = function(player_id){
   	socket.emit('submitWinner', {
   		currentMatch: $scope.currentMatch,
