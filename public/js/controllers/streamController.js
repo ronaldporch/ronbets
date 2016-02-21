@@ -4,11 +4,20 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
   $scope.streamer = $stateParams.params.streamer;
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
   $scope.user.bet = {}
+  $scope.event = {
+    id: 0,
+    name: "General Betting"
+  }
   var server = ($location.$$host == "localhost") ? "localhost:3000" + "/stream" : $location.$$host + "/stream"
     var socket = io(server, {'forceNew': true});
     socket.emit('getRecentMatch', {
         streamer: $scope.streamer,
         user: $scope.user.id
+    })
+    socket.on('getCurrentEvent', function(data){
+        $scope.$apply(function(){
+            $scope.event = data.event
+        })
     })
     socket.on('sendRecentMatch', function(data){
       $scope.$apply(function(){
@@ -19,6 +28,17 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.$apply(function(){
             $scope.currentMatch = data;
         })
+    })
+    socket.on('currentEventWallet', function(data){
+        $scope.$apply(function(){
+            if(data.inEvent){
+                $scope.user.wallet = data.ante
+                $scope.user.inEvent = true
+            }else{
+                $scope.user.wallet = "$0.00"
+                $scope.user.inEvent = false
+            }
+        }) 
     })
     $scope.$on('$destroy', function(){
         socket.emit('leaveRoom', {
@@ -53,7 +73,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         })
         socket.on('sendUserInfo', function(data){
             $scope.$apply(function(){
-                $scope.user.wallet = data.wallet
+                //$scope.user.wallet = data.wallet
             })
         })
     }
@@ -89,7 +109,11 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
 
     socket.on('yourWallet', function(data){
         $scope.$apply(function(){
-            $scope.user.wallet = data.wallet
+            if(data.wallet){
+                $scope.user.wallet = data.wallet
+            }else{
+                $scope.user.wallet = data.ante
+            }
         })
     })
 
@@ -98,7 +122,8 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.user.bet.user_id = $scope.user.id
         socket.emit('sendBet', {
             bet: $scope.user.bet,
-            streamer: $scope.streamer
+            streamer: $scope.streamer,
+            event_id: $scope.event.id
         })
         $scope.user.bet = {}
     }

@@ -1,0 +1,15 @@
+<div class="container">
+	<div class="col-sm-8">
+		<h1>Events</h1>
+		<hr>
+		<div class="col-md-7">
+				<ul class="list-group">
+					<li ng-repeat="event in events" class="list-group-item" ng-class="{'list-group-item-success':event.active}">
+						<h4 class="list-group-item-heading"><a href="/#/events/{{event.id}}">{{event.name}} <small>by {{event.username}}</small></a></h4>
+						<p class="list-group-item-text">{{event.game}}</p>
+						<p class="list-group-item-text">{{event.date | date:'medium'}}</p>
+					</li>
+				</ul>
+			</div>
+	</div>
+</div>

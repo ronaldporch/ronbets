@@ -1,10 +1,18 @@
 <div ng-show="currentMatch">
   <div class="col-md-12">
     <div ng-hide="currentMatch.playing || currentMatch.winner" class="alert bet-timer" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
+      <marquee ng-if="currentMatch.betting">
+      Next Match for 
+      <strong>{{currentMatch.game}}</strong>: <strong>{{currentMatch.players[0].name}}</strong> vs <strong>{{currentMatch.players[1].name}}. </strong>
+      <span ng-hide="currentMatch.remaining_time <= 9">Place your bets!</span>
+      <span ng-show="currentMatch.remaining_time <= 9">Time is Running Out!</span>
+    </marquee>
+    <marquee ng-if="!currentMatch.betting && !currentMatch.winner">Betting for the current match is over!</marquee>
+    <marquee ng-if="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
         <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
     </div>
   </div>
-  <div ng-show="!currentMatch.betting || user.currentBet || !isLoggedIn">
+  <div ng-show="!currentMatch.betting || user.currentBet || !isLoggedIn || !user.inEvent">
     <div class="col-sm-6">
       <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 1), 'panel-default':(currentMatch.winner != 1)}">
         <div class="panel-heading text-center"><strong>{{currentMatch.players[0].name}}</strong></div>
@@ -34,13 +42,13 @@
       </div>
     </div>
   </div>
-  <div ng-hide="!currentMatch.betting || user.currentBet || !isLoggedIn" class="text-center">
+  <div ng-hide="!currentMatch.betting || user.currentBet || !isLoggedIn || !user.inEvent" class="text-center">
     <button ng-repeat="player in currentMatch.players track by $index" ng-class="{'active':user.bet.player == $index + 1}" class="btn btn-info btn-lg player-bet" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
     <div ng-show="user.bet.player">
       <form ng-submit="submitBet()">
         <div class="input-group input-group-lg col-xs-3">
           <span class="input-group-addon">$</span>
-          <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet}}">
+          <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet|toNum}}">
           <span class="input-group-addon">.00</span>
         </div>
           <button type="submit">Submit Bet</button>

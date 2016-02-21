@@ -1,3 +1,31 @@
 <div class="container">
-	{{event}}
+	<div class="col-sm-7">
+		<h2>{{event.name}}</h2>
+		<h4>hosted by {{event.username}} <sup ng-if="event.streamer_id == user.id" title="You are the organizer of this event."><span class="glyphicon glyphicon-tag"></span></sup></h4>
+		<hr>
+		<h4 ng-show="entry">You are participating in this event with an ante of {{entry.ante}}.</h4>
+		<h5><span class="glyphicon glyphicon-calendar"> </span> {{event.date|date:'medium'}}</h5>
+		{{event}}
+		{{event.ante_min|toNum}}
+		{{event.ante_max|toNum}}
+		{{ante}}
+	</div>
+	<div class="col-sm-5">
+		<h3>Event Options</h3>
+		<div>
+			<form ng-show="isJoining" class="form-inline" name="form" ng-submit="submitEntry()">
+				<div class="input-group">
+  					<span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-usd"></span></span>
+  					<input type="number" ng-model="ante" min="{{event.ante_min|toNum}}" max="{{event.ante_max|toNum}}" class="form-control" placeholder="Ante" aria-describedby="basic-addon1" name="ante" required>
+				</div>
+				<button type="submit" class="btn btn-primary">Submit Entry</button>
+			</form>
+			<button ng-click="showForm()" ng-if="user && !entry" class="btn btn-primary"><span ng-show="isJoining">Cancel </span>Join Event</button>
+			<button ng-show="entry" ng-click="cancelEntry()" class="btn btn-danger">Cancel Entry</button>
+		</div>
+		<div ng-show="event.streamer_id == user.id">
+			<button ng-hide="event.active" class="btn btn-primary" ng-click="startEvent()">Start Event</button>
+			<button ng-show="event.active" class="btn btn-danger" ng-click="endEvent()">End Event</button>
+		</div>
+	</div>
 </div>

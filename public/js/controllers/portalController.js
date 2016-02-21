@@ -19,12 +19,20 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
     remaining_time: undefined,
     game: undefined
   }
-
+  $scope.event = {
+    id: 0,
+    name: "General Betting"
+  }
+  socket.on('getCurrentEvent', function(data){
+    $scope.event = data.event
+    console.log($scope.event)
+  })
   $scope.submitWinner = function(player_id){
   	socket.emit('submitWinner', {
   		currentMatch: $scope.currentMatch,
   		winner: player_id,
-  		stream_name: $scope.user.username
+  		stream_name: $scope.user.username,
+      event_id: $scope.event.id
   	})
   }
   $scope.startPlaying = function(){
@@ -59,6 +67,7 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
   		stream_name: $scope.user.username,
       streamer: $scope.user.username,
   		players: $scope.newMatch.players,
+      event_id: $scope.event.id,
   		remaining_time: $scope.newMatch.remaining_time
   	})
   }

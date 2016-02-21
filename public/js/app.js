@@ -91,3 +91,15 @@ app.config(['$urlRouterProvider', '$stateProvider', '$httpProvider', function($u
       controller: "ActivationController"
     })
 }])
+app.filter('toNum', function() {
+  return function(input) {
+    if(input){
+      var num = input.replace('$', '')
+      num = num.replace(/,/g, '')
+      //var num = Math.round(num)
+      return num;
+    }else{
+      return input;
+    }
+  };
+});
