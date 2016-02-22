@@ -1,6 +1,6 @@
 var app = angular.module('CasinoNight.controllers')
 app.controller('SettingsController', ['$scope', 'Auth', '$http', '$location', function($scope, Auth, $http, $location){
-	$scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
+	$scope.server = $location.$$host == "localhost" ? "localhost:3000" : $location.$$host;
 	$scope.getUser = function(){
 		$scope.user = Auth.currentUserPayload()
 		console.log($scope.user)

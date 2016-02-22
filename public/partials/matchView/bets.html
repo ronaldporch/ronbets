@@ -12,7 +12,7 @@
         <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
     </div>
   </div>
-  <div ng-show="!currentMatch.betting || user.hasBet || !isLoggedIn || ((currentMatch.event_id > 0 && !user.inEvent) || currentMatch.event_id == 0)">
+  <div ng-show="!currentMatch.betting || user.hasBet || !isLoggedIn || ((currentMatch.event_id > 0 && !user.inEvent))">
     <div class="col-sm-6">
       <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 1), 'panel-default':(currentMatch.winner != 1)}">
         <div class="panel-heading text-center"><strong>{{currentMatch.players[0].name}}</strong></div>
@@ -46,7 +46,7 @@
     <button ng-repeat="player in currentMatch.players track by $index" ng-class="{'active':user.bet.player == $index + 1}" class="btn btn-info btn-lg player-bet" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
     <div ng-show="user.bet.player">
       <form ng-submit="submitBet()">
-        <div class="input-group input-group-lg col-xs-3">
+        <div class="input-group input-group-lg col-sm-6">
           <span class="input-group-addon">$</span>
           <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet|toNum}}">
           <span class="input-group-addon">.00</span>

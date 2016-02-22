@@ -16,6 +16,7 @@
           <li ng-hide="user"><a href="/#/sign_in">Sign In</a></li>
           <li ng-hide="user"><a href="/#/register">Register</a></li>
           <li><a href="/#/events">Events</a></li>
+          <li><a href="/#/stream/{{user.username}}" target="_blank">My Stream</a></li>
           <li ng-show="user"><a href="/#/dashboard">Dashboard</a></li>
           <li ng-show="user"><a href="/#/portal">Betting Center</a></li>
           <li ng-show="user" ng-click="signOut()"><a href="">Sign Out</a></li>

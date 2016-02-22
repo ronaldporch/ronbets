@@ -76,9 +76,6 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         user: $scope.user
       })
     })
-    socket.emit('getWallet', {
-      user: $scope.user
-    })
     socket.on('eventEntry', function(data){
         $scope.$apply(function(){
             if(data.entry){
@@ -140,10 +137,16 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
                 event: $scope.event,
                 streamer: $scope.streamer
             })
-            socket.emit('getEventEntry', {
-              event: $scope.event,
-              user: $scope.user
-            })
+            if($scope.event.id == 0){
+              socket.emit('getWallet', {
+                user: $scope.user
+              })
+            }else{
+              socket.emit('getEventEntry', {
+                event: $scope.event,
+                user: $scope.user
+              })
+            }
         })
     })
 
