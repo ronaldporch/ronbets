@@ -13,6 +13,7 @@ var challonge = require('./routes/index');
 var users = require('./routes/users');
 var auth = require('./routes/auth');
 var events = require('./routes/events');
+var stripe = require('./routes/stripe');
 
 var app = express();
 //var expressWs = require('express-ws')(app);
@@ -39,6 +40,7 @@ app.use('/api/challonge/tournaments?', function(req, res, next) {
 app.use('/api/users', users);
 app.use('/api/auth', auth);
 app.use('/api/events', events);
+app.use('/api/stripe', stripe);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

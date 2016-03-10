@@ -70,6 +70,11 @@ app.config(['$urlRouterProvider', '$stateProvider', '$httpProvider', function($u
       templateUrl: "partials/settings.html",
       controller: "SettingsController"
     })
+    .state('credits', {
+      url: "/credits",
+      templateUrl: "partials/credits.html",
+      controller: "CreditsController"
+    })
     .state('portal', {
       url: "/portal",
       templateUrl: "partials/portal.html",
