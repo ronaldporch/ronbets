@@ -9,12 +9,18 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     var socket = io(server, {'forceNew': true});
 
     socket.emit('getStreamInfo', {
-        streamer: $scope.streamer
+        streamer: $scope.streamer,
+        user: $scope.user
     })
-
     socket.on('playingMatch', function(data){
         $scope.$apply(function(){
             $scope.currentMatch = data;
+        })
+    })
+    socket.on('currentUsers', function(data){
+        $scope.$apply(function(){
+            $scope.participants = data.participants;
+            console.log($scope.participants);
         })
     })
     socket.on('currentEventWallet', function(data){
@@ -27,6 +33,9 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
                 $scope.user.inEvent = false
             }
         }) 
+    })
+    socket.on('disconnect', function(){
+        console.log('disconnect');
     })
     $scope.$on('$destroy', function(){
         socket.emit('leaveRoom', {

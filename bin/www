@@ -80,6 +80,7 @@ var updateUserWallet = function(data, rooms){
       console.log(err)
     }else{
       rooms.to(data.stream_name).emit('checkForWalletUpdates')
+      getUsers(data.stream_name, rooms)
     }
   })
 }
@@ -93,6 +94,7 @@ var updateEntryAnte = function(data, rooms){
       console.log(err)
     }else{
       rooms.to(data.stream_name).emit('checkForEntryUpdates')
+      getUsers(data.stream_name, rooms)
     }
   })
 }
@@ -226,6 +228,7 @@ var currentBetsToRoom = function(data, rooms){
       rooms.to(data.streamer.username).emit('currentBets', {
         bets: bets
       })
+      getUsers(data.streamer.username, rooms)
     }
   })
 }
@@ -293,6 +296,45 @@ var getCurrentMatch = function(data, socket){
   })
 }
 
+var updateParticipants = function(data, socket, rooms){
+  var queryString = "update test.rooms set users = array_append(users, $1) where streamer_id = (select id from test.users where username = $2) returning *"
+  client.query(queryString, [data.user.id, data.streamer], function(err, result){
+    if(err){
+      console.log(err)
+    }else{
+      getUsers(data.streamer, rooms)
+    }
+  })
+}
+
+var getUsers = function(streamer, rooms){
+  var queryString = "select * from test.users where (select users from test.rooms where streamer_id = (select id from test.users where username = $1)) @> ARRAY[id] order by wallet desc"
+  client.query(queryString, [streamer], function(err, result){
+    if(err){
+      console.log(err)
+    }else{
+      var users = result.rows
+      rooms.to(streamer).emit('currentUsers', {
+        participants: users
+      })
+    }
+  })
+}
+
+var removeUser = function(socket){
+  var queryString = "update test.rooms set users = array_remove(users, (select id from test.users where username = $1)) where streamer_id = (select id from test.users where username = $2) returning *"
+  client.query(queryString, [socket.username, socket.room], function(err, result){
+    if(err){
+      console.log(err)
+    }else{
+      var users = result.rows[0]
+      socket.emit('currentUsers', {
+        users: users
+      })
+    }
+  })
+}
+
 var getCurrentBets = function(data, socket){
   var queryString = "select b.*, u.username, u.email from test.bets b join test.users u on b.user_id = u.id where match_id = $1 order by b.id desc"
   client.query(queryString, [data.match.id], function(err, result){
@@ -327,12 +369,16 @@ var streamView = io
   .of('/stream')
   .on('connection', function(socket){
     socket.on('getStreamInfo', function(data){
+      socket.username = data.user.username;
+      socket.room = data.streamer;
       socket.join(data.streamer)
       streamInfo(data, socket)
+      updateParticipants(data, socket, streamView)
     })
     socket.on('getConnection', function(data){
       socket.join(data.streamer.username)
       getCurrentEvent(data, socket)
+
     })
     socket.on('leaveRoom', function(data){
       console.log('leaving room: ', data.streamer)
@@ -349,6 +395,7 @@ var streamView = io
     })
     socket.on('disconnect', function(data){
       console.log('disconnected from: ')
+      removeUser(socket)
     })
     socket.on('getEventEntry', function(data){
       getEventEntry(data, socket)
