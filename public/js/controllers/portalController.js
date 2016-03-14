@@ -35,7 +35,8 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
   		currentMatch: $scope.currentMatch,
   		winner: player_id,
   		stream_name: $scope.user.username,
-      event_id: $scope.event.id
+      event_id: $scope.event.id,
+      event: $scope.event
   	})
   }
   $scope.startPlaying = function(){

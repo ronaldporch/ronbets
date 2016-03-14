@@ -94,7 +94,7 @@ var updateEntryAnte = function(data, rooms){
       console.log(err)
     }else{
       rooms.to(data.stream_name).emit('checkForEntryUpdates')
-      getUsers(data.stream_name, rooms)
+      getEventUsers(data.stream_name, rooms, data)
     }
   })
 }
@@ -228,7 +228,6 @@ var currentBetsToRoom = function(data, rooms){
       rooms.to(data.streamer.username).emit('currentBets', {
         bets: bets
       })
-      getUsers(data.streamer.username, rooms)
     }
   })
 }
@@ -302,7 +301,7 @@ var updateParticipants = function(data, socket, rooms){
     if(err){
       console.log(err)
     }else{
-      getUsers(data.streamer, rooms)
+      //getUsers(data.streamer, rooms)
     }
   })
 }
@@ -315,6 +314,20 @@ var getUsers = function(streamer, rooms){
     }else{
       var users = result.rows
       rooms.to(streamer).emit('currentUsers', {
+        participants: users
+      })
+    }
+  })
+}
+
+var getEventUsers = function(streamer, rooms, data){
+  var queryString = "select * from test.entries te join test.users tu on te.user_id = tu.id where te.id = $1 order by te.ante desc"
+  client.query(queryString, [data.event.id], function(err, result){
+    if(err){
+      console.log(err)
+    }else{
+      var users = result.rows
+      rooms.to(streamer).emit('currentEventUsers', {
         participants: users
       })
     }
@@ -357,8 +370,10 @@ var addBet = function(data, socket){
     }else{
       if(data.event.id == 0){
         removeMoneyFromWallet(data, socket)
+        getUsers(data.streamer.username, streamView)
       }else{
         removeMoneyFromAnte(data, socket)
+        getEventUsers(data.streamer.username, streamView, data)
       }
       currentBetsToRoom(data, streamView)
     }
@@ -378,7 +393,6 @@ var streamView = io
     socket.on('getConnection', function(data){
       socket.join(data.streamer.username)
       getCurrentEvent(data, socket)
-
     })
     socket.on('leaveRoom', function(data){
       console.log('leaving room: ', data.streamer)
@@ -386,6 +400,12 @@ var streamView = io
     })
     socket.on('getCurrentMatch', function(data){
       getCurrentMatch(data, socket)
+    })
+    socket.on('getParticipants', function(data){
+      getUsers(data.streamer, streamView)
+    })
+    socket.on('getEventParticipants', function(data){
+      getEventUsers(data.streamer.username, streamView, data)
     })
     socket.on('submitWinner', function(data){
       submitWinner(data, streamView)

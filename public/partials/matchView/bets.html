@@ -51,9 +51,9 @@
           <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet|toNum}}">
           <span class="input-group-addon">.00</span>
         </div>
-          <button type="submit">Submit Bet</button>
-          <button ng-click="cancelBet()">Cancel Bet</button>
+          <button type="submit" class="btn btn-primary">Submit Bet</button>
       </form>
+      <button ng-click="cancelBet()" class="btn btn-primary">Cancel Bet</button>
         </div>
     </div>
   </div>
