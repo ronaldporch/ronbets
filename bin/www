@@ -181,8 +181,54 @@ var streamView = io
       startPlaying(data, streamView)
     })
     socket.on('sendNewMatch', function(data){
-      startNewMatch(data, streamView, socket)
+      var query = "insert into test.matches (players, game, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4, $5) returning *"
+      var queryData = [data.players, data.game, data.remaining_time, data.streamer_id, data.event_id]
+      var emitName = "startNewMatch"
+      var startTimer = function(){
+        var gameObject = {
+          match: results[0],
+          socketIO: socketIO,
+          stream_name: data.stream_name,
+          streamer: data.streamer
+        }
+        
+        socketIO.to(room).emit(emitName, results[0])
+        if(typeof countDown.interval[data.streamer] !== 'undefined'){
+          clearInterval(countDown.interval[data.streamer]);
+        }
+          data.socketIO = streamView
+          interval[data.streamer] = setInterval(countDown, 1000, gameObject);
+        }
+      }
+      generalQuery()
     })
+
+    var startNewMatch = function(data, rooms, socket){
+      var queryString = "insert into test.matches (players, game_id, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4, $5) returning *"
+      client.query(queryString, [data.players, 1, data.remaining_time, data.streamer_id, data.event_id], function(err, result){
+        if(err){
+          console.log(err)
+        }else{
+          var gameObject = {
+            match: result.rows[0],
+            socketIO: streamView,
+            stream_name: data.stream_name,
+            streamer: data.streamer
+          }
+          rooms.to(data.stream_name).emit('startNewMatch', result.rows[0])
+          var match = result.rows[0]
+          socket.emit('currentMatch', {
+            match: match
+          })
+          
+          if(typeof interval[data.streamer] !== 'undefined'){
+            clearInterval(interval[data.streamer]);
+          }
+            data.socketIO = streamView
+            interval[data.streamer] = setInterval(countDown, 1000, gameObject);
+          }
+      })
+    }
   })
 /**
  * Listen on provided port, on all network interfaces.
