@@ -1,0 +1,6 @@
+<div class="col-md-12">
+  <div ng-include src="'partials/portal/match-form.html'"></div>
+  <button ng-click="closeBetting()" class="btn btn-danger" ng-show="currentMatch.betting">Close Betting</button>
+  <button ng-click="startPlaying()" class="btn btn-primary" ng-show="!currentMatch.betting && !currentMatch.playing && !currentMatch.winner">Start Match</button>
+  <button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary" ng-show="currentMatch.playing" ng-click="submitWinner($index + 1)">{{player.name}}</button>
+</div>

@@ -10,22 +10,10 @@
     <chat url="chatUrl" chat-height="stream.height" chat-width="stream.width"></chat>
   </div>
   <div class="col-md-4">
-    <div class="row">
       <div ng-include src="'partials/matchView/bets.html'"></div>
-    </div>
   </div>
   <div class="col-md-4">
-    <table class="table table-bordered">
-      <tr class="text-center">
-        <th>User</th>
-        <th>Money</th>
-      </tr>
-      <tr ng-repeat="participant in participants">
-        <td><img src="http://www.gravatar.com/avatar/{{participant.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{participant.username}}</td>
-        <td ng-hide="event">{{participant.wallet}}</td>
-        <td ng-show="event">{{participant.ante}}</td>
-      </tr>
-    </table>
+      <div ng-include src="'partials/matchView/participants.html'"></div>
   </div>
 </div>
 <style type="text/css">

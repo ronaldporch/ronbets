@@ -1,0 +1,11 @@
+<table class="table table-bordered">
+	<tr>
+		<th>Player 1</th>
+		<th>Player 2</th>
+		<th>Event</th>
+	</tr>
+	<tr ng-repeat="match in matches">
+		<td ng-repeat="player in match.players">{{player.name}}</td>
+		<td>{{match.event_name}}</td>
+	</tr>
+</table>

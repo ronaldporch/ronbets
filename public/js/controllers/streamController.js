@@ -93,10 +93,14 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     })
     socket.on('eventEntry', function(data){
         $scope.$apply(function(){
-            if(data.entry){
-              $scope.user.inEvent = true
-            }
-            $scope.user.wallet = data.entry.ante
+            $scope.user.ante = data[0].ante
+            socket.emit('getCurrentBets', {
+                match: $scope.currentMatch
+            })
+            socket.emit('getParticipants', {
+                event: $scope.event,
+                streamer: $scope.streamer
+            })
         })
     })
     socket.on('wallet', function(data){
@@ -154,7 +158,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             })
             if($scope.event.id == 0){
               socket.emit('getParticipants', {
-                streamer: $scope.streamer
+                streamer: $scope.streamer.username
               })
               socket.emit('getWallet', {
                 user: $scope.user

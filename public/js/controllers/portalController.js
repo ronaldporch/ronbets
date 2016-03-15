@@ -21,7 +21,24 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
     remaining_time: undefined,
     game: undefined
   }
+  socket.emit('getMatches', {
+    streamer: $scope.user
+  })
+  socket.emit('getOpenEvents', {
+    streamer: $scope.user
+  })
+  socket.on('matches', function(data){
+    $scope.$apply(function(){
+      $scope.matches = data.matches
+    })
+  })
 
+  socket.on('openEvents', function(data){
+    $scope.$apply(function(){
+      $scope.events = data.events
+      console.log($scope.events)
+    })
+  })
   socket.on('currentEvent', function(data){
     $scope.event = data.event
     socket.emit('getCurrentMatch', {

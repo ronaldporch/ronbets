@@ -1,45 +1,11 @@
-<div class="container">
-  <div class="col-md-12">
-    <h2>Current Event: {{event.name}}</h2>
-    <h2>Match #{{currentMatch.id}}: <span ng-repeat="player in currentMatch.players">{{player.name}} <span ng-hide="$index + 1 == currentMatch.players.length">vs </span></span>
-    </h2>
+<div class="container-fluid">
+  <div class="col-md-6">
+    <div ng-include src="'partials/portal/match.html'"></div>
   </div>
-  <div class="col-md-7">
-    <form class="form-horizontal" ng-submit="sendNewMatch()" ng-show="!currentMatch || currentMatch.winner">
-      <div class="form-group">
-        <label for="player1" class="col-sm-2 control-label">Player 1</label>
-        <div class="col-sm-10">
-          <input ng-if="event.id == 0" class="form-control" type="text" placeholder="Player 1" ng-model="newMatch.players[0].name" required>
-          <select ng-if="event.id != 0" class="form-control" ng-model="newMatch.players[0].name" required>
-            <option ng-repeat="player in event.players" value="{{player.name}}">{{player.name}}</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="player2" class="col-sm-2 control-label">Player 2</label>
-        <div class="col-sm-10">
-          <input ng-if="event.id == 0" class="form-control" type="text" placeholder="Player 2" ng-model="newMatch.players[1].name" required>
-          <select ng-if="event.id != 0" class="form-control" ng-model="newMatch.players[1].name" required>
-            <option ng-repeat="player in event.players" value="{{player.name}}">{{player.name}}</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="time" class="col-sm-2 control-label">Time</label>
-        <div class="col-sm-10">
-          <input class="form-control" type="number" placeholder="Allotted Betting Time (In Seconds)" ng-model="newMatch.remaining_time" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="name" class="col-sm-2 control-label">Game</label>
-        <div class="col-sm-10">
-          <input class="form-control" type="text" placeholder="Game" ng-model="newMatch.game">
-        </div>
-      </div>
-      <button class="btn btn-primary col-sm-offset-2" type="submit">Start</button>
-    </form>
+  <div class="col-md-4">
+    <div ng-include src="'partials/portal/events.html'"></div>
   </div>
-<button ng-click="closeBetting()" class="btn btn-danger" ng-show="currentMatch.betting">Close Betting</button>
-<button ng-click="startPlaying()" class="btn btn-primary" ng-show="!currentMatch.betting && !currentMatch.playing && !currentMatch.winner">Start Match</button>
-<button ng-repeat="player in currentMatch.players track by $index" class="btn btn-primary" ng-show="currentMatch.playing" ng-click="submitWinner($index + 1)">{{player.name}}</button>
+  <div class="col-md-2">
+    <div ng-include src="'partials/portal/matches.html'"></div>
+  </div>
 </div>
