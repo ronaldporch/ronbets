@@ -3,7 +3,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
   $scope.isLoggedIn = Auth.isLoggedIn()
   $scope.streamerName = $stateParams.params.streamer;
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
-  $scope.user.bet = {}
+  $scope.user.newBet = {}
 
   var server = ($location.$$host == "localhost") ? "localhost:3000" + "/stream" : $location.$$host + "/stream"
     var socket = io(server, {'forceNew': true});
@@ -38,7 +38,8 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     socket.on('startNewMatch', function(data){
         $scope.$apply(function(){
             $scope.currentMatch = data
-            $scope.currentBets = [[],[]]
+            $scope.bets = [[],[]]
+            $scope.user.bet = undefined
         })
     })
 
@@ -48,16 +49,16 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         })
     })
 
-    socket.on('eventEntry', function(data){
-        $scope.$apply(function(){
-            $scope.user.ante = data[0].ante
-            socket.emit('getCurrentBets', {
-                match: $scope.currentMatch
-            })
-            socket.emit('getParticipants', {
-                currentEvent: $scope.event,
-                streamer: $scope.streamer
-            })
+    socket.on('update', function(data){
+        socket.emit('getCurrentBets', {
+            currentMatch: $scope.currentMatch,
+            streamer: $scope.streamer,
+            updateStatus: 'room'
+        })
+        socket.emit('getParticipants', {
+            currentEvent: $scope.currentEvent,
+            streamer: $scope.streamer,
+            updateStatus: 'room'
         })
     })
 
@@ -85,6 +86,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             $scope.bets[1].push(value)
           }
         })
+        console.log($scope.bets)
       })
     })
 
@@ -92,20 +94,44 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.$apply(function(){
             $scope.currentMatch = data[0]
             console.log($scope.currentMatch)
-            socket.emit('getCurrentBets', {
-                currentMatch: $scope.currentMatch,
-                updateStatus: 'self'
-            })
+            if($scope.currentMatch){
+                socket.emit('getCurrentBets', {
+                    currentMatch: $scope.currentMatch,
+                    updateStatus: 'self'
+                })
+            }
+        })
+    })
+
+    socket.on('checkForEntryUpdates', function(data){
+        socket.emit('getMatches', {
+            currentEvent: $scope.currentEvent,
+            streamer: $scope.streamer,
+            updateStatus: 'self'
+        })
+        socket.emit('getParticipants', {
+            currentEvent: $scope.currentEvent,
+            updateStatus: 'self'
         })
     })
 
     socket.on('openEvents', function(data){
         $scope.$apply(function(){
+          console.log(data)
+          var generalBet;
+            $scope.currentEvent = undefined
             data.forEach(function(value, index, arr){
                 if(value.active == true){
                     $scope.currentEvent = value
                 }
+                if(value.general == true){
+                  generalBet = value
+                }
             })
+            if($scope.currentEvent == undefined){
+              $scope.currentEvent = generalBet
+            }
+            $scope.events = data
         })
         socket.emit('getMatches', {
             currentEvent: $scope.currentEvent,
@@ -146,7 +172,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     $scope.submitBet = function(){
         $scope.user.newBet.match_id = $scope.currentMatch.id
         $scope.user.newBet.user_id = $scope.user.id
-        socket.emit('sendBet', {
+        socket.emit('addBet', {
             bet: $scope.user.newBet,
             streamer: $scope.streamer,
             event: $scope.currentEvent

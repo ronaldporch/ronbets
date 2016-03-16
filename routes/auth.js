@@ -4,8 +4,8 @@ var passport = require('passport');
 var auth = require('../functions/user.js')
 var pg = require('pg')
 var nodemailer = require('nodemailer')
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
-//var conString = process.env.DATABASE_URL
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 
 var transporter = nodemailer.createTransport({
 	service: 'Gmail',

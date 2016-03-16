@@ -27,11 +27,14 @@ app.controller('PortalController', ['$scope', 'Auth', '$location', function($sco
 socket.on('matches', function(data){
     $scope.$apply(function(){
         $scope.currentMatch = data[0]
+        $scope.matches = data
         console.log($scope.currentMatch)
-        socket.emit('getCurrentBets', {
+        if($scope.currentMatch){
+          socket.emit('getCurrentBets', {
             currentMatch: $scope.currentMatch,
             updateStatus: 'self'
-        })
+          })
+        }
     })
 })
 
@@ -46,14 +49,23 @@ socket.on('streamInfo', function(data){
 })
 
 socket.on('openEvents', function(data){
-    $scope.$apply(function(){
-        data.forEach(function(value, index, arr){
-            if(value.active == true){
-                $scope.currentEvent = value
-                console.log($scope.currentEvent)
-            }
-        })
-    })
+      $scope.$apply(function(){
+        console.log(data)
+        var generalBet;
+          $scope.currentEvent = undefined
+          data.forEach(function(value, index, arr){
+              if(value.active == true){
+                  $scope.currentEvent = value
+              }
+              if(value.general == true){
+                generalBet = value
+              }
+          })
+          if($scope.currentEvent == undefined){
+            $scope.currentEvent = generalBet
+          }
+          $scope.events = data
+      })
     socket.emit('getMatches', {
         currentEvent: $scope.currentEvent,
         streamer: $scope.streamer,
@@ -71,6 +83,18 @@ socket.on('openEvents', function(data){
   	})
   })
 
+  socket.on('startNewMatch', function(data){
+    $scope.$apply(function(){
+        $scope.matches.unshift(data)
+        if($scope.matches.length > 10){
+          $scope.matches.pop()
+        }
+        $scope.currentMatch = data
+        $scope.bets = [[],[]]
+        $scope.user.bet = undefined
+    })
+  })
+
   $scope.newMatch = {
     players: [],
     remaining_time: undefined,
@@ -82,8 +106,8 @@ socket.on('openEvents', function(data){
   		currentMatch: $scope.currentMatch,
   		winner: player_id,
   		stream_name: $scope.user.username,
-      event_id: $scope.event.id,
-      event: $scope.event
+      event_id: $scope.currentEvent.id,
+      event: $scope.currentEvent
   	})
   }
   $scope.startPlaying = function(){

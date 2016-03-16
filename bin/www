@@ -8,8 +8,8 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
-//var conString = process.env.DATABASE_URL
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 console.log(conString)
 /**
  * Get port from environment and store in Express.
@@ -93,7 +93,7 @@ var streamView = io
     })
     socket.on('getOpenEvents', function(data){
       var emitName = "openEvents"
-      var query = "select * from test.events where streamer_id = $1 and complete = false";
+      var query = "select * from test.events where streamer_id = $1 and (closed = false or general = true) order by general desc";
       var queryData = [data.streamer.id]
       if(data.updateStatus == "self"){
         generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
@@ -103,7 +103,7 @@ var streamView = io
     })
     socket.on('getMatches', function(data){
       var emitName = 'matches'
-      var query = "select tm.*, te.name from test.matches tm join test.events te on tm.event_id = te.id where tm.event_id = $1 order by tm.id desc"
+      var query = "select tm.*, te.name from test.matches tm join test.events te on tm.event_id = te.id where tm.event_id = $1 order by tm.id desc limit 10"
       var queryData = [
         data.currentEvent.id
       ]
@@ -175,8 +175,19 @@ var streamView = io
       getCurrentEvent(data, socket)
     })
     socket.on('submitWinner', function(data){
-      submitWinner(data, streamView)
+      var query = "update test.matches set winner = $1, closed = true, playing = false where id = $2 returning *"
+      var queryData =  [data.winner, data.currentMatch.id]
+      var emitName = "showWinner"
+      var updateAnte = function(emitName, queryResults, socket, room, data){
+        socket.to(room).emit(emitName, queryResults)
+        var query = "update test.entries set ante = (ante + ((select amount from test.bets where test.bets.match_id = $1 and test.bets.player_id = $2 and test.bets.user_id = test.entries.user_id) * 2)) where test.entries.user_id = any(CAST((select array_agg(b.user_id) from test.bets b where match_id = $1 and player_id = $2) as int[])) returning *";
+        var queryData2 = [data.currentMatch.id, data.winner]
+        var emitName2 = 'checkForEntryUpdates'
+        generalQuery(emitName2, query, queryData2, socket, room, data, updateRoom)
+      }
+      generalQuery(emitName, query, queryData, streamView, data.stream_name, data, updateAnte)
     })
+
     socket.on('startPlaying', function(data){
       var query = "update test.matches set playing = true where id = $1 returning *"
       var queryData = [data.currentMatch.id]
@@ -185,8 +196,8 @@ var streamView = io
     })
 
     socket.on('sendNewMatch', function(data){
-      var query = "insert into test.matches (players, game, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4, $5) returning *"
-      var queryData = [data.players, data.game, data.remaining_time, data.streamer_id, data.event_id]
+      var query = "insert into test.matches (players, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4) returning *"
+      var queryData = [data.players, data.remaining_time, data.streamer_id, data.event_id]
       var emitName = "startNewMatch"
       var startTimer = function(emitName, queryResults, socket, room, data){
         var gameObject = {

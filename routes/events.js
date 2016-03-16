@@ -4,8 +4,8 @@ var passport = require('passport');
 var auth = require('../functions/user.js')
 var pg = require('pg')
 var nodemailer = require('nodemailer')
-var conString = "postgres://postgres:Blazeteam1@localhost/test"
-//var conString = process.env.DATABASE_URL
+//var conString = "postgres://postgres:Blazeteam1@localhost/test"
+var conString = process.env.DATABASE_URL
 
 var transporter = nodemailer.createTransport({
 	service: 'Gmail',
@@ -35,7 +35,7 @@ router.get('/', function(req, res, next){
 		if(err){
 			return console.error('error fetching client from pool', err);
 		}
-		var queryString = "select test.events.id, test.events.game, test.events.name, test.events.active, test.events.date, test.users.username from test.events join test.users on test.events.streamer_id = test.users.id order by test.events.id desc"
+		var queryString = "select test.events.id, test.events.game, test.events.name, test.events.active, test.events.date, test.users.username, test.events.general from test.events join test.users on test.events.streamer_id = test.users.id order by test.events.id desc"
 		client.query(queryString, function(err, result){
 		done();
 		if(err){
@@ -69,7 +69,7 @@ router.post('/end', function(req, res, next){
 		if(err){
 			return console.error('error fetching client from pool', err);
 		}
-		var queryString = "update test.events set active = false, complete = true where id = $1 returning *"
+		var queryString = "update test.events set active = false, closed = true where id = $1 returning *"
 		client.query(queryString, [req.body.event_id], function(err, result){
 		done();
 		if(err){

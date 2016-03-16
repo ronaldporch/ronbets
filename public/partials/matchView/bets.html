@@ -1,80 +1,82 @@
-<div ng-show="currentMatch">
-  <div class="col-md-12">
-    <div ng-hide="currentMatch.playing || currentMatch.winner" class="alert bet-timer" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
-      <marquee ng-if="currentMatch.betting">
-      Next Match for 
-      <strong>{{currentMatch.game}}</strong>: <strong>{{currentMatch.players[0].name}}</strong> vs <strong>{{currentMatch.players[1].name}}. </strong>
-      <span ng-hide="currentMatch.remaining_time <= 9">Place your bets!</span>
-      <span ng-show="currentMatch.remaining_time <= 9">Time is Running Out!</span>
-    </marquee>
-    <marquee ng-if="!currentMatch.betting && !currentMatch.winner">Betting for the current match is over!</marquee>
-    <marquee ng-if="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
-        <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
+<div class="row">
+  <div ng-show="currentMatch">
+    <div class="col-md-12">
+      <div ng-hide="currentMatch.playing || currentMatch.winner" class="alert bet-timer" ng-class="{'alert-info':currentMatch.betting, 'alert-danger':!currentMatch.betting, 'alert-warning': (currentMatch.betting && currentMatch.remaining_time <= 9)}" role="alert">
+        <marquee ng-if="currentMatch.betting">
+        Next Match for 
+        <strong>{{currentMatch.game}}</strong>: <strong>{{currentMatch.players[0].name}}</strong> vs <strong>{{currentMatch.players[1].name}}. </strong>
+        <span ng-hide="currentMatch.remaining_time <= 9">Place your bets!</span>
+        <span ng-show="currentMatch.remaining_time <= 9">Time is Running Out!</span>
+      </marquee>
+      <marquee ng-if="!currentMatch.betting && !currentMatch.winner">Betting for the current match is over!</marquee>
+      <marquee ng-if="currentMatch.winner">This game's winner is: <strong>{{currentMatch.players[currentMatch.winner - 1].name}}!</strong></marquee>
+          <p class="text-center time"><b>{{currentMatch.remaining_time * 1000|date:'m:ss'}}</b></p>
+      </div>
     </div>
-  </div>
-  <div ng-show="!currentMatch.betting || user.hasBet || !isLoggedIn || ((currentMatch.event_id > 0 && !user.inEvent))">
-    <div class="col-sm-6">
-      <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 1), 'panel-default':(currentMatch.winner != 1)}">
-        <div class="panel-heading text-center"><strong>{{currentMatch.players[0].name}}</strong></div>
-        <div class="panel-body" ng-hide="currentBets[0].length > 0">
+    <div ng-hide="(entry && isLoggedIn && !user.bet && currentMatch.betting)">
+      <div class="col-sm-6">
+        <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 1), 'panel-default':(currentMatch.winner != 1)}">
+          <div class="panel-heading text-center"><strong>{{currentMatch.players[0].name}}</strong></div>
+          <div class="panel-body" ng-hide="bets[0].length > 0">
+            
+          <p class="text-center">No Bets!</p>
+          </div>
+          <table class="table table-hover" ng-show="bets[0].length > 0">
+          <tr ng-repeat="someBet in bets[0]">
+            <td><img src="http://www.gravatar.com/avatar/{{someBet.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{someBet.username}}"> {{someBet.amount}}</td>
+          </tr>
+        </table>
+        </div>
+      </div>
+      
+      <div class="col-sm-6">
+        <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 2), 'panel-default':(currentMatch.winner != 2)}">
+          <div class="panel-heading text-center"><strong>{{currentMatch.players[1].name}}</strong></div>
+        <div class="panel-body" ng-hide="bets[1].length > 0">
           
         <p class="text-center">No Bets!</p>
         </div>
-        <table class="table table-hover" ng-show="currentBets[0].length > 0">
-        <tr ng-repeat="bets in currentBets[0]">
-          <td><img src="http://www.gravatar.com/avatar/{{bets.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{bets.amount}}</td>
-        </tr>
-      </table>
-      </div>
-    </div>
-    
-    <div class="col-sm-6">
-      <div class="panel" ng-class="{'panel-primary':(currentMatch.winner == 2), 'panel-default':(currentMatch.winner != 2)}">
-        <div class="panel-heading text-center"><strong>{{currentMatch.players[1].name}}</strong></div>
-      <div class="panel-body" ng-hide="currentBets[1].length > 0">
-        
-      <p class="text-center">No Bets!</p>
-      </div>
-      <table class="table table-hover" ng-show="currentBets[1].length > 0">
-        <tr ng-repeat="bets in currentBets[1]">
-          <td><img src="http://www.gravatar.com/avatar/{{bets.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{bets.amount}}</td>
-      </table>
-      </div>
-    </div>
-  </div>
-  <div ng-hide="!currentMatch.betting || user.hasBet || !isLoggedIn || ((currentMatch.event_id > 0 && !user.inEvent))" class="text-center">
-    <button ng-repeat="player in currentMatch.players track by $index" ng-class="{'active':user.bet.player == $index + 1}" class="btn btn-info btn-lg player-bet" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
-    <div ng-show="user.bet.player">
-      <form ng-submit="submitBet()">
-        <div class="input-group input-group-lg col-sm-6">
-          <span class="input-group-addon">$</span>
-          <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.bet.amount" min="0" max="{{user.wallet|toNum}}">
-          <span class="input-group-addon">.00</span>
+        <table class="table table-hover" ng-show="bets[1].length > 0">
+          <tr ng-repeat="someBet in bets[1]">
+            <td><img src="http://www.gravatar.com/avatar/{{someBet.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{someBet.username}}"> {{someBet.amount}}</td>
+        </table>
         </div>
-          <button type="submit" class="btn btn-primary">Submit Bet</button>
-      </form>
-      <button ng-click="cancelBet()" class="btn btn-primary">Cancel Bet</button>
-        </div>
+      </div>
     </div>
+    <div ng-show="entry && !user.bet && currentMatch.betting && isLoggedIn" class="text-center">
+      <button ng-repeat="player in currentMatch.players track by $index" ng-class="{'active':user.newBet.player == $index + 1}" class="btn btn-info btn-lg player-bet" ng-click="startBet($index + 1)" ng-model="button[$index + 1]">{{player.name}}</button>
+      <div ng-show="user.newBet.player">
+        <form ng-submit="submitBet()">
+          <div class="input-group input-group-lg col-sm-6">
+            <span class="input-group-addon">$</span>
+            <input type="number" aria-label="Amount (to the nearest dollar)" class="form-control" ng-model="user.newBet.amount" min="0" max="{{entry.ante|toNum}}" required>
+            <span class="input-group-addon">.00</span>
+          </div>
+            <button type="submit" class="btn btn-primary">Submit Bet</button>
+        </form>
+        <button ng-click="cancelBet()" class="btn btn-primary">Cancel Bet</button>
+          </div>
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <div ng-hide="currentMatch" class="text-center" style="color: white;">
+    <h2>No Matches!</h2>
+  </div>
+  <pre ng-hide="true">
+    Has the user bet already? {{user.bet != null}}
+    Betting: {{currentMatch.betting}}
+    Is User Logged In? {{isLoggedIn}}
+    Is user in event? {{entry != null}}
+  </pre>
 
-<div ng-hide="currentMatch">
-  No Matches Played on this stream!
+  <style type="text/css">
+    .player-bet {
+      margin: 0 10px;
+    }
+    .bet-timer {
+      border-radius: 0px;
+    }
+  </style>
 </div>
-<pre ng-hide="true">
-  Betting: {{currentMatch.betting}}
-  User placed bet: {{user.hasBet}}
-  Is User Logged In? {{isLoggedIn}}
-  Is user in event? {{(currentMatch.event_id > 0 && user.inEvent) || currentMatch.event_id == 0}}
-</pre>
-
-<style type="text/css">
-  .player-bet {
-    margin: 0 10px;
-  }
-  .bet-timer {
-    border-radius: 0px;
-  }
-</style>
