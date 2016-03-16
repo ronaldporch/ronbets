@@ -8,8 +8,8 @@ var app = require('../app');
 var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-var conString = process.env.DATABASE_URL
+var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = process.env.DATABASE_URL
 console.log(conString)
 /**
  * Get port from environment and store in Express.
@@ -27,19 +27,20 @@ var io = require('socket.io')(server);
 var client = new pg.Client(conString);
 client.connect();
 
-var timerManagement = function(data){
-  var interval = {}
+var timerManagement = function(){
+  interval = {}
 
-  var action = function(query, queryData, data, callback){
+  var someQuery = function(query, queryData, data, callbac){
     client.query(query, queryData, function(err, result){
-      err ? console.log(err) : callback(data, result.rows)
+      err ? console.log(err) : callbac(data, result.rows)
     })
   }
 
-  var updateTime = function(data){
+  this.updateTime = function(data){
     var query = "update test.matches set remaining_time = remaining_time - 1 where id = $1 returning remaining_time"
     var queryData = [data.match.id]
-    action(query, queryData, data, endTimer)
+    console.log("counting down")
+    someQuery(query, queryData, data, endTimer)
   }
 
   var endTimer = function(data, results){
@@ -47,7 +48,7 @@ var timerManagement = function(data){
     if(results[0]['remaining_time'] == 0){
       var queryString = "update test.matches set remaining_time = 0, betting = false where id = $1 returning *"
       var queryData = [data.match.id]
-      action(queryString, queryData, data, closeBetting)
+      someQuery(queryString, queryData, data, closeBetting)
     }
   }
 
@@ -58,20 +59,21 @@ var timerManagement = function(data){
   }
 }
 
-var countDown = new timerManagement();
+countDown = new timerManagement();
+console.log(countDown.updateTime)
 
-var generalQuery = function(emitName, query, queryData, socket, room, callback){
+var generalQuery = function(emitName, query, queryData, socket, room, data, callback){
   client.query(query, queryData, function(err, result){
     err ? console.log(err) : callback(emitName, result.rows, socket, room, data)
   })
 }
 
-var updateRoom = function(emitName, data, socket, room, data){
-  socketIO.to(room).emit(emitName, data)
+var updateRoom = function(emitName, queryResults, socket, room, data){
+  socket.to(room).emit(emitName, queryResults)
 }
 
-var updateSelf = function(emitName, data, socket, room, data){
-  userSocket.emit(emitName, data)
+var updateSelf = function(emitName, queryResults, socket, room, data){
+  socket.emit(emitName, queryResults)
 }
 
 var streamView = io
@@ -87,72 +89,70 @@ var streamView = io
     })
     socket.on('disconnect', function(data){
       console.log('disconnected from: ')
-      removeUser(socket)
+      //removeUser(socket)
     })
     socket.on('getOpenEvents', function(data){
       var emitName = "openEvents"
-      var queryString = "select * from test.events where streamer_id = $1 and closed = false";
+      var query = "select * from test.events where streamer_id = $1 and complete = false";
       var queryData = [data.streamer.id]
       if(data.updateStatus == "self"){
-        generalQuery(emitName, query, queryData, socket, false, updateSelf)
+        generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
       }else{
-        generalQuery(emitName, query, queryData, streamView, data.streamer.username, updateSelf)
+        generalQuery(emitName, query, queryData, streamView, data.streamer.username, data, updateRoom)
       }
     })
     socket.on('getMatches', function(data){
       var emitName = 'matches'
-      var query = "select tm.players, tm.id, te.name from test.matches tm join test.events te on tm.event_id = te.id where tm.event_id = $1 order by tm.id desc"
+      var query = "select tm.*, te.name from test.matches tm join test.events te on tm.event_id = te.id where tm.event_id = $1 order by tm.id desc"
       var queryData = [
-        data.event.id
+        data.currentEvent.id
       ]
       if(data.updateStatus == "self"){
-        generalQuery(emitName, query, queryData, socket, false, updateSelf)
+        generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
       }else{
-        generalQuery(emitName, query, queryData, streamView, data.streamer.username, updateSelf)
+        generalQuery(emitName, query, queryData, streamView, data.streamer.username, data, updateRoom)
       }
     })
     socket.on('getParticipants', function(data){
-      var emitName = "currentEventUsers"
+      var emitName = "currentParticipants"
       var query = "select * from test.entries te join test.users tu on te.user_id = tu.id where te.event_id = $1 order by te.ante desc"
-      var queryData = [data.event.id]
+      var queryData = [data.currentEvent.id]
       if(data.updateStatus == "self"){
-        generalQuery(emitName, query, queryData, socket, false, updateSelf)
+        generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
       }else{
-        generalQuery(emitName, query, queryData, streamView, data.streamer.username, updateSelf)
+        generalQuery(emitName, query, queryData, streamView, data.streamer.username, data, updateSelf)
       }
     })
     socket.on('getCurrentBets', function(data){
       var query = "select b.*, u.username, u.email from test.bets b join test.users u on b.user_id = u.id where match_id = $1 order by b.id desc"
       var emitName = 'currentBets'
       var queryData = [
-        data.match.id
+        data.currentMatch.id
       ]
       if(data.updateStatus == "self"){
-        generalQuery(emitName, query, queryData, socket, false, updateSelf)
+        generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
       }else{
-        generalQuery(emitName, query, queryData, streamView, data.streamer.username, updateSelf)
+        generalQuery(emitName, query, queryData, streamView, data.streamer.username, data, updateSelf)
       }
     })
 
     //User
     socket.on('getStreamInfo', function(data){
-      socket.username = data.user.username;
-      socket.room = data.streamer;
       socket.join(data.streamer)
-      streamInfo(data, socket)
-      updateParticipants(data, socket, streamView)
+      var query = "select * from test.users where username = $1"
+      var queryData = [data.streamer]
+      var emitName = "streamInfo"
+      generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
     })
-    socket.on('getUserInfo', function(data){
-      userInfo(data, socket)
-    })
+
     socket.on('getEventEntry', function(data){
       var query = "select * from test.entries where event_id = $1 and user_id = $2"
       var queryData = [
-        data.event.id,
+        data.currentEvent.id,
         data.user.id
       ]
       var emitName = "eventEntry"
-      generalQuery(emitName, query, queryData, socket, false, updateSelf)
+      generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
     })
     socket.on('addBet', function(data){
       var query = "insert into test.bets (match_id, player_id, amount, user_id) values ($1, $2, $3, $4) returning *"
@@ -163,10 +163,10 @@ var streamView = io
         var query = "update test.entries set ante = ante - $1 where user_id = $2 and event_id = $3 returning *"
         var queryData = [data.bet.amount, data.bet.user_id, data.event.id]
         var emitName = "update"
-        generalQuery(emitName, query, queryData, socket, false, updateSelf)
+        generalQuery(emitName, query, queryData, socket, false, data, updateSelf)
       }
 
-      generalQuery(emitName, query, queryData, socket, false, removeMoneyFromAnte)
+      generalQuery(emitName, query, queryData, socket, false, data, removeMoneyFromAnte)
     })
 
     //Streamer
@@ -178,57 +178,33 @@ var streamView = io
       submitWinner(data, streamView)
     })
     socket.on('startPlaying', function(data){
-      startPlaying(data, streamView)
+      var query = "update test.matches set playing = true where id = $1 returning *"
+      var queryData = [data.currentMatch.id]
+      var emitName = "playingMatch"
+      generalQuery(emitName, query, queryData, streamView, data.stream_name, data, updateRoom)
     })
+
     socket.on('sendNewMatch', function(data){
       var query = "insert into test.matches (players, game, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4, $5) returning *"
       var queryData = [data.players, data.game, data.remaining_time, data.streamer_id, data.event_id]
       var emitName = "startNewMatch"
-      var startTimer = function(){
+      var startTimer = function(emitName, queryResults, socket, room, data){
         var gameObject = {
-          match: results[0],
-          socketIO: socketIO,
+          match: queryResults[0],
+          socketIO: socket,
           stream_name: data.stream_name,
           streamer: data.streamer
         }
         
-        socketIO.to(room).emit(emitName, results[0])
-        if(typeof countDown.interval[data.streamer] !== 'undefined'){
-          clearInterval(countDown.interval[data.streamer]);
+        socket.to(room).emit(emitName, queryResults[0])
+        if(typeof interval[data.streamer] !== 'undefined'){
+          clearInterval(interval[data.streamer]);
         }
-          data.socketIO = streamView
-          interval[data.streamer] = setInterval(countDown, 1000, gameObject);
-        }
+        data.socketIO = socket
+        interval[data.streamer] = setInterval(countDown.updateTime, 1000, gameObject);
       }
-      generalQuery()
+      generalQuery(emitName, query, queryData, streamView, data.streamer, data, startTimer)
     })
-
-    var startNewMatch = function(data, rooms, socket){
-      var queryString = "insert into test.matches (players, game_id, remaining_time, streamer_id, event_id) values ($1, $2, $3, $4, $5) returning *"
-      client.query(queryString, [data.players, 1, data.remaining_time, data.streamer_id, data.event_id], function(err, result){
-        if(err){
-          console.log(err)
-        }else{
-          var gameObject = {
-            match: result.rows[0],
-            socketIO: streamView,
-            stream_name: data.stream_name,
-            streamer: data.streamer
-          }
-          rooms.to(data.stream_name).emit('startNewMatch', result.rows[0])
-          var match = result.rows[0]
-          socket.emit('currentMatch', {
-            match: match
-          })
-          
-          if(typeof interval[data.streamer] !== 'undefined'){
-            clearInterval(interval[data.streamer]);
-          }
-            data.socketIO = streamView
-            interval[data.streamer] = setInterval(countDown, 1000, gameObject);
-          }
-      })
-    }
   })
 /**
  * Listen on provided port, on all network interfaces.

@@ -3,8 +3,8 @@ var router = express.Router();
 var pg = require('pg');
 var passport = require('passport');
 var auth = require('../functions/user.js')
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-var conString = process.env.DATABASE_URL
+var conString = "postgres://postgres:Blazeteam1@localhost/test"
+//var conString = process.env.DATABASE_URL
 
 /* GET users listing. */
 router.param('id', function(req, res, next, id){

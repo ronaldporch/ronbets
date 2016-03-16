@@ -1,7 +1,7 @@
 var app = angular.module('CasinoNight.controllers')
 app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', function($scope, $stateParams, $sce, $location, Auth){
   $scope.isLoggedIn = Auth.isLoggedIn()
-  $scope.streamer = $stateParams.params.streamer;
+  $scope.streamerName = $stateParams.params.streamer;
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
   $scope.user.bet = {}
 
@@ -9,88 +9,45 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     var socket = io(server, {'forceNew': true});
 
     socket.emit('getStreamInfo', {
-        streamer: $scope.streamer,
+        streamer: $scope.streamerName,
         user: $scope.user
     })
+
     socket.on('playingMatch', function(data){
         $scope.$apply(function(){
-            $scope.currentMatch = data;
+            $scope.currentMatch = data[0];
         })
     })
-    socket.on('currentUsers', function(data){
+
+    socket.on('currentParticipants', function(data){
         $scope.$apply(function(){
-            $scope.participants = data.participants;
+            $scope.participants = data;
+            $scope.participants.forEach(function(value, index, arr){
+                if(value.user_id == $scope.user.id){
+                    $scope.entry = value
+                }
+            })
             console.log($scope.participants);
         })
     })
-    socket.on('currentEventUsers', function(data){
-        $scope.$apply(function(){
-            $scope.participants = data.participants;
-            console.log($scope.participants);
-        })
-    })
-    socket.on('currentEventWallet', function(data){
-        $scope.$apply(function(){
-            if(data.inEvent){
-                $scope.user.wallet = data.ante
-                $scope.user.inEvent = true
-            }else{
-                $scope.user.wallet = "$0.00"
-                $scope.user.inEvent = false
-            }
-        }) 
-    })
+
     socket.on('disconnect', function(){
         console.log('disconnect');
     })
-    $scope.$on('$destroy', function(){
-        socket.emit('leaveRoom', {
-            streamer: $scope.streamer
-        })
-        socket.disconnect()
-        socket.emit('disconnect', {
-            streamer: $scope.streamer
-        })
-    })
-    $scope.startBet = function(player_id){
-        $scope.user.bet.player = player_id
-    }
+
     socket.on('startNewMatch', function(data){
         $scope.$apply(function(){
             $scope.currentMatch = data
             $scope.currentBets = [[],[]]
-            $scope.user.hasBet = false;
         })
     })
+
     socket.on('showWinner', function(data){
         $scope.$apply(function(){
             $scope.currentMatch = data
         })
-        socket.emit('getUserInfo', {
-            user: $scope.user.id
-        })
     })
-    if(Auth.isLoggedIn()){
-        socket.emit('getUserInfo', {
-            user: $scope.user.id
-        })
-        socket.on('sendUserInfo', function(data){
-            $scope.$apply(function(){
-                //$scope.user.wallet = data.wallet
-            })
-        })
-    }
-    socket.on('checkForEntryUpdates', function(){
-      socket.emit('getEventEntry', {
-        event: $scope.event,
-        user: $scope.user
-      })
-    })
-    socket.on('checkForWalletUpdates', function(){
-      socket.emit('getWallet', {
-        user: $scope.user
-      })
-    })
+
     socket.on('eventEntry', function(data){
         $scope.$apply(function(){
             $scope.user.ante = data[0].ante
@@ -98,16 +55,12 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
                 match: $scope.currentMatch
             })
             socket.emit('getParticipants', {
-                event: $scope.event,
+                currentEvent: $scope.event,
                 streamer: $scope.streamer
             })
         })
     })
-    socket.on('wallet', function(data){
-        $scope.$apply(function(){
-            $scope.user.wallet = data.user.wallet
-        })
-    })
+
     socket.on('remainingTime', function(data){
         $scope.$apply(function(){
             $scope.currentMatch.remaining_time = data.remaining_time
@@ -118,72 +71,92 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             $scope.currentMatch = data
         })
     })
+
     socket.on('currentBets', function(data){
       $scope.$apply(function(){
-        $scope.currentBets = [[],[]]
-        data.bets.forEach(function(value, index, ar){
+        $scope.bets = [[],[]]
+        data.forEach(function(value, index, arr){
           if(value.user_id == $scope.user.id){
-            $scope.user.hasBet = true
+            $scope.user.bet = value
           }
           if(value.player_id == 1){
-            $scope.currentBets[0].push(value)
+              $scope.bets[0].push(value)
           }else if(value.player_id == 2){
-            $scope.currentBets[1].push(value)
+            $scope.bets[1].push(value)
           }
         })
       })
     })
 
-    $scope.submitBet = function(){
-        $scope.user.bet.match_id = $scope.currentMatch.id
-        $scope.user.bet.user_id = $scope.user.id
-        socket.emit('sendBet', {
-            bet: $scope.user.bet,
-            streamer: $scope.streamer,
-            event: $scope.event
+    socket.on('matches', function(data){
+        $scope.$apply(function(){
+            $scope.currentMatch = data[0]
+            console.log($scope.currentMatch)
+            socket.emit('getCurrentBets', {
+                currentMatch: $scope.currentMatch,
+                updateStatus: 'self'
+            })
         })
-        $scope.user.bet = {}
+    })
+
+    socket.on('openEvents', function(data){
+        $scope.$apply(function(){
+            data.forEach(function(value, index, arr){
+                if(value.active == true){
+                    $scope.currentEvent = value
+                }
+            })
+        })
+        socket.emit('getMatches', {
+            currentEvent: $scope.currentEvent,
+            streamer: $scope.streamer,
+            updateStatus: 'self'
+        })
+        socket.emit('getParticipants', {
+            currentEvent: $scope.currentEvent,
+            updateStatus: 'self'
+        })
+    })
+
+    socket.on('streamInfo', function(data){
+      $scope.$apply(function(){
+        $scope.streamer = data[0]
+        $scope.setupStream()
+        socket.emit('getOpenEvents', {
+          streamer: $scope.streamer,
+          updateStatus: "self"
+        })
+      })
+    })
+
+    $scope.$on('$destroy', function(){
+        socket.emit('leaveRoom', {
+            streamer: $scope.streamer
+        })
+        socket.disconnect()
+        socket.emit('disconnect', {
+            streamer: $scope.streamer
+        })
+    })
+
+    $scope.startBet = function(player_id){
+        $scope.user.newBet.player = player_id
+    }
+
+    $scope.submitBet = function(){
+        $scope.user.newBet.match_id = $scope.currentMatch.id
+        $scope.user.newBet.user_id = $scope.user.id
+        socket.emit('sendBet', {
+            bet: $scope.user.newBet,
+            streamer: $scope.streamer,
+            event: $scope.currentEvent
+        })
+        $scope.user.newBet = {}
     }
 
     $scope.cancelBet = function(){
-        $scope.user.bet = {}
+        $scope.user.newBet = {}
     }
-
-    socket.on('currentEvent', function(data){
-        $scope.$apply(function(){
-            $scope.event = data.event
-            socket.emit('getCurrentMatch', {
-                event: $scope.event,
-                streamer: $scope.streamer
-            })
-            if($scope.event.id == 0){
-              socket.emit('getParticipants', {
-                streamer: $scope.streamer.username
-              })
-              socket.emit('getWallet', {
-                user: $scope.user
-              })
-            }else{
-              socket.emit('getEventParticipants', {
-                event: $scope.event,
-                streamer: $scope.streamer
-              })
-              socket.emit('getEventEntry', {
-                event: $scope.event,
-                user: $scope.user
-              })
-            }
-        })
-    })
-
-    socket.on('currentMatch', function(data){
-        $scope.$apply(function(){
-            $scope.currentMatch = data.match
-            socket.emit('getCurrentBets', {
-                match: $scope.currentMatch
-            })
-        })
-    })
 
     $scope.setupStream = function(){
         $scope.stream = {
@@ -206,15 +179,6 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
         $scope.chatUrl = $sce.trustAsResourceUrl(chatServiceUrl);
     }
     
-    socket.on('streamInfo', function(data){
-      $scope.$apply(function(){
-        $scope.streamer = data.streamer
-        socket.emit('getCurrentEvent', {
-            streamer: $scope.streamer
-        })
-        $scope.setupStream()
-      })
-    })
     $(window).resize(function(){
         $scope.$apply(function(){
             $scope.stream.width = document.getElementById('stream-view').offsetWidth - 30
