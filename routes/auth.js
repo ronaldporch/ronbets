@@ -45,6 +45,14 @@ router.post('/register', function(req, res, next){
 					return res.status(400).json({error: true, message: err})
 				}
 				var user = result.rows[0]
+				var query = "insert into test.events (streamer_id, active, ante_min, ante_max, name, game, closed, general) values ($1, false, 0, 1000, 'General Betting', 'Game', false, true)"
+				client.query(query, [user.id], function(err, result){
+					done();
+					if(err){
+						console.log(err)
+						return res.status(400).json({error: true, message: err})
+					}
+				})
 				var mailOptions = {
 					from: 'Casino Night <dada5714@gmail.com>',
 					to: user.email,

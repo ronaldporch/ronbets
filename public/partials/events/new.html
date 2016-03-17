@@ -3,48 +3,7 @@
 		<div class="col-md-12">
       <h1>Add Event</h1>
       <hr>
-			<form class="form-horizontal">
-           <div class="form-group">
-              <label for="" class="col-sm-2 control-label">Event Name</label>
-              <div class="col-sm-5">
-                <input type="text" ng-model="event.name" class="form-control" placeholder="Event Name"></input>
-              </div>
-           </div>
-           <div class="form-group">
-              <label for="" class="col-sm-2 control-label">Game</label>
-              <div class="col-sm-5">
-                <input type="text" ng-model="event.game" class="form-control" placeholder="Game"></input>
-              </div>
-           </div>
-           <div class="form-group">
-              <label for="" class="col-sm-2 control-label">Minimum Ante</label>
-              <div class="col-sm-3">
-                <input type="number" ng-model="event.ante_min" class="form-control" placeholder="Minimum Ante"></input>
-              </div>
-           </div>
-           <div class="form-group">
-              <label for="" class="col-sm-2 control-label">Maximum Ante</label>
-              <div class="col-sm-3">
-                <input type="number" ng-model="event.ante_max" class="form-control" placeholder="Maximum Ante"></input>
-              </div>
-           </div>
-           <div class="form-group">
-              <label for="" class="col-sm-2 control-label">Date</label>
-              <div class="col-sm-3">
-                <input type="datetime-local" ng-model="event.date" class="form-control"></input>
-              </div>
-           </div>
-           <div class="form-group">
-              <label for="" class="col-sm-2 col-sm-offset2 control-label">Players</label>
-           </div>
-            <div class="form-group">
-              <div class="col-sm-5 col-sm-offset-2" ng-repeat="player in event.players track by $index">
-                <input type="text" class="form-control" placeholder="New Player" ng-model="event.players[$index].name"></input>
-              </div>
-              <button ng-click="addPlayer()" class="btn btn-info"><span class="gylphicon glyphicon-plus"> </span>Add Player</button>
-           </div>
-           <div class="col-sm-offset-2"><button type="submit" class="btn btn-primary" ng-click="submitEvent()">Add Event</button></div>
-      </form>
+			<div ng-include src="'partials/events/event-form.html'"></div>
 		</div>
     {{event}}
 	</div>

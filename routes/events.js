@@ -149,6 +149,30 @@ router.post('/', function(req, res, next){
 	})
 })
 
+router.put('/', function(req, res, next){
+	pg.connect(conString, function(err, client, done){
+		if(err){
+			return console.error('error fetching client from pool', err);
+		}
+		var dateOption = ""
+		var queryData = [req.body.game, req.body.ante_min, req.body.ante_max, req.body.name, req.body.players, req.body.id]
+		if(typeof req.body.date !== undefined){
+			dateOption += ", date = $7"
+			queryData.push(req.body.date)
+		}
+
+		var queryString = "update test.events set game = $1, ante_min = $2, ante_max = $3, name = $4, players = $5" + dateOption + " where id = $6 returning *"
+		client.query(queryString, queryData, function(err, result){
+		done();
+		if(err){
+			console.log(err)
+			return res.status(400).json({error: true, message: err})
+		}
+		return res.json(result.rows[0])
+		})
+	})
+})
+
 router.post('/entry', function(req, res, next){
 	pg.connect(conString, function(err, client, done){
 		if(err){

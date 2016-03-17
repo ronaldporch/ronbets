@@ -1,5 +1,5 @@
 var app = angular.module('CasinoNight.controllers')
-app.controller('EventViewController', ['$scope', '$http', '$stateParams', 'Auth', function($scope, $http, $stateParams, Auth){
+app.controller('EventViewController', ['$scope', '$http', '$stateParams', 'Auth', '$state', function($scope, $http, $stateParams, Auth, $state){
 	$scope.getEvent = function(){
 		$http.get('/api/events/event/' + $stateParams.event_id)
 			.then(function(res){
@@ -16,10 +16,29 @@ app.controller('EventViewController', ['$scope', '$http', '$stateParams', 'Auth'
 				console.log($scope.entry)
 			})
 	}
+	$scope.addPlayer = function(){
+		$scope.event.players.push({})
+	}
 	$scope.getEvent()
 	$scope.isJoining = false
 	$scope.showForm = function(){
 		$scope.isJoining = !$scope.isJoining
+	}
+	$scope.submitEvent = function(){
+		console.log($scope.event.players)
+		$scope.event.players = $scope.event.players.filter(function(n){
+			return Object.keys(n).length !== 0 && n.name != ""
+		})
+		// $scope.event.players = [
+		// 	{name: "Mario"},
+		// 	{name: "Bowser"}
+		// ]
+		$http.put('/api/events/', $scope.event)
+		.then(function(res){
+			console.log(res.data)
+			$scope.event = res.data
+			$state.go('dashboard')
+		})
 	}
 	$scope.submitEntry = function(){
 		$scope.entry = {

@@ -3,7 +3,7 @@ app.controller('ActivationController', ['$scope', '$stateParams', '$http', '$loc
   $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
   $scope.getUser = function(){
     $scope.user = {}
-    $http.get("http://" + $scope.server + '/api/auth/getUser/' + $stateParams.id)
+    $http.get('/api/auth/getUser/' + $stateParams.id)
       .then(function(res){
         $scope.user.username = res.data.username
         $scope.user.id = res.data.id
@@ -12,7 +12,7 @@ app.controller('ActivationController', ['$scope', '$stateParams', '$http', '$loc
       })
   }
   $scope.activateUser = function(){
-    $http.post("http://" + $scope.server + '/api/auth/activate', $scope.user)
+    $http.post('/api/auth/activate', $scope.user)
       .then(function(res){
         Auth.saveToken(res.data.token)
         $state.go('dashboard')
