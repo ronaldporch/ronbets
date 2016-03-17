@@ -5,8 +5,7 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
   $scope.user.newBet = {}
 
-  var server = ($location.$$host == "localhost") ? "localhost:3000" + "/stream" : $location.$$host + "/stream"
-    var socket = io(server, {'forceNew': true});
+    var socket = io("/stream", {'forceNew': true});
 
     socket.emit('getStreamInfo', {
         streamer: $scope.streamerName,

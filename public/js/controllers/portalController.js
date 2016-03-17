@@ -1,8 +1,6 @@
 var app = angular.module('CasinoNight.controllers')
 app.controller('PortalController', ['$scope', 'Auth', '$location', function($scope, Auth, $location){
-  console.log($location.$$host)
-  var server = $location.$$host == "localhost" ? "localhost:3000/stream" : $location.$$host + "/stream";
-  var socket = io("http://" + server)
+  var socket = io("/stream")
   $scope.user = Auth.currentUserPayload()
   console.log($scope.user)
 
