@@ -188,14 +188,13 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             width: document.getElementById('stream-view').offsetWidth - 30,
             height: (document.getElementById('stream-view').offsetWidth - 30) / 1.777
         }
-        var streamServiceUrl = $scope.streamer.stream_service == 'twitch' ? "http://player.twitch.tv/?channel=" : "http://hitbox.tv/#!/embed/"
+        var streamServiceUrl = $scope.streamer.stream_service == 'twitch' ? "https://player.twitch.tv/?channel=" : "https://hitbox.tv/#!/embed/"
         var chatServiceUrl = ""
         if($scope.streamer.chat_service == "stream"){
-            console.log("stream chat")
             if($scope.streamer.stream_service == "twitch"){
-                chatServiceUrl = "http://twitch.tv/" + $scope.streamer.stream_name + "/chat?popout=true"
+                chatServiceUrl = "https://twitch.tv/" + $scope.streamer.stream_name + "/chat?popout=true"
             }else{
-                chatServiceUrl = "http://www.hitbox.tv/embedchat/" + $scope.streamer.stream_name
+                chatServiceUrl = "https://www.hitbox.tv/embedchat/" + $scope.streamer.stream_name
             }
         }else{
             chatServiceUrl = ""
