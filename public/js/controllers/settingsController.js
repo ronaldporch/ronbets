@@ -7,7 +7,7 @@ app.controller('SettingsController', ['$scope', 'Auth', '$http', '$location', fu
 	}
 	$scope.getUser()
 	$scope.updateUser = function(){
-		$http.post("http://" + $scope.server + '/api/users/' + $scope.user.id, $scope.user)
+		$http.post('/api/users/' + $scope.user.id, $scope.user)
 			.then(function(res){
 				Auth.saveToken(res.data.token)
 			})

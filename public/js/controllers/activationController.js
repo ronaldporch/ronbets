@@ -1,6 +1,5 @@
 var app = angular.module('CasinoNight.controllers')
 app.controller('ActivationController', ['$scope', '$stateParams', '$http', '$location', '$state', 'Auth', function($scope, $stateParams, $http, $location, $state, Auth){
-  $scope.server = $location.$$host == "localhost" ? "http://localhost:3000/" : $location.$$host;
   $scope.getUser = function(){
     $scope.user = {}
     $http.get('/api/auth/getUser/' + $stateParams.id)
