@@ -3,8 +3,7 @@ var router = express.Router();
 var pg = require('pg');
 var passport = require('passport');
 var auth = require('../functions/user.js')
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
-var stripe = require('stripe')('sk_test_QQU5TlOJRvvEv9bazOnJvcB0')
+var stripe = require('stripe')(process.env.STRIPE_API)
 var conString = process.env.DATABASE_URL
 
 /* GET users listing. */
@@ -17,7 +16,6 @@ router.post('/credits', function(req, res, next){
 		if(err){
 			res.json(err)
 		}
-		//res.json(charge)
 		var creditAmount;
 		switch(charge.amount){
 			case 500:
@@ -37,13 +35,20 @@ router.post('/credits', function(req, res, next){
 			if(err){
 				return console.error('error', err);
 			}
-			var queryString = "update test.users set wallet = wallet + $1 where id = $2"
-			client.query(queryString, [creditAmount, req.body.user_id], function(err, results){
+			var queryString = "update test.entries set ante = ante + $1, recharged = true where user_id = $2 and event_id = $3"
+			client.query(queryString, [creditAmount, req.body.user_id, req.body.event_id], function(err, results){
 				done();
 				if(err){
 					return console.error("error", err);
 				}
-				res.json({success: true});
+				var queryString = "insert into test.recharges (streamer_id, amount) values ($1, $2)"
+				client.query(queryString, [req.body.streamer_id, (charge.amount / 200)], function(err, result){
+					done();
+					if(err){
+						return console.error("error: ", err)
+					}
+					res.json({success: true});
+				})
 			});
 		})
 	})

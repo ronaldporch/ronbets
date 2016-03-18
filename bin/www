@@ -9,7 +9,7 @@ var debug = require('debug')('testApp:server');
 var http = require('http');
 var pg = require('pg');
 var conString = process.env.DATABASE_URL
-console.log(conString)
+console.log(process.env.STRIPE_API)
 /**
  * Get port from environment and store in Express.
  */
@@ -59,7 +59,6 @@ var timerManagement = function(){
 }
 
 countDown = new timerManagement();
-console.log(countDown.updateTime)
 
 var generalQuery = function(emitName, query, queryData, socket, room, data, callback){
   client.query(query, queryData, function(err, result){

@@ -1,0 +1,19 @@
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">No More Ante... :(</h4>
+      </div>
+      <div class="modal-body">
+        <p>Doesn't look like you had much luck this time... how about a <a href="" ng-click="recharge()">recharge</a> of your credits to get you going again?</p>
+
+        <p>Recharging allows you to stay in the game even when you're done and out. A portion of the recharge goes to <strong>{{streamer.username}}</strong>, the current dealer of games and also helps keep Casino Night from breaking the bank.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">No Thanks</button>
+        <button type="button" class="btn btn-primary" ng-click="recharge()">I'm not a quitter!</button>
+      </div>
+    </div>
+  </div>
+</div>

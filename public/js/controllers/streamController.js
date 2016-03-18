@@ -1,9 +1,10 @@
 var app = angular.module('CasinoNight.controllers')
-app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', function($scope, $stateParams, $sce, $location, Auth){
+app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Auth', '$state', function($scope, $stateParams, $sce, $location, Auth, $state){
   $scope.isLoggedIn = Auth.isLoggedIn()
   $scope.streamerName = $stateParams.params.streamer;
   $scope.user = Auth.currentUserPayload() ? Auth.currentUserPayload() : {}
   $scope.user.newBet = {}
+  $scope.warned = false;
 
     var socket = io("/stream", {'forceNew': true});
 
@@ -24,6 +25,13 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
             $scope.participants.forEach(function(value, index, arr){
                 if(value.user_id == $scope.user.id){
                     $scope.entry = value
+                    if($scope.entry.ante == "$0.00" && $scope.warned == false){
+                        $('#myModal').modal()
+                        $scope.warned = true;
+                    }
+                    if($scope.entry.ante != "$0.00"){
+                        $scope.warned = false;
+                    }
                 }
             })
             console.log($scope.participants);
@@ -33,6 +41,12 @@ app.controller('StreamController', ['$scope', '$state', '$sce', '$location', 'Au
     socket.on('disconnect', function(){
         console.log('disconnect');
     })
+
+    $scope.recharge = function(){
+        $('#myModal').modal('hide')
+        $('#rechargeModal').modal()
+        //$state.go('credits')
+    }
 
     socket.on('startNewMatch', function(data){
         $scope.$apply(function(){

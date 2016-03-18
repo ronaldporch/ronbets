@@ -1,0 +1,18 @@
+<div class="modal fade" id="rechargeModal" tabindex="-1" role="dialog" ng-controller="CreditsController">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Recharge for <strong>{{currentEvent.name}}</strong></h4>
+      </div>
+      <div class="modal-body">
+        <p>Stay in the game! Recharging for this event helps not only you, but <b>{{streamer}}</b> and Casino Night as well.</p>
+        <div ng-include src="'partials/recharge.html'"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" ng-click="submitCharge()">Recharge</button>
+      </div>
+    </div>
+  </div>
+</div>

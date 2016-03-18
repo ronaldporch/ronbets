@@ -4,7 +4,6 @@ var passport = require('passport');
 var auth = require('../functions/user.js')
 var pg = require('pg')
 var nodemailer = require('nodemailer')
-//var conString = "postgres://postgres:Blazeteam1@localhost/test"
 var conString = process.env.DATABASE_URL
 
 var transporter = nodemailer.createTransport({
@@ -45,7 +44,7 @@ router.post('/register', function(req, res, next){
 					return res.status(400).json({error: true, message: err})
 				}
 				var user = result.rows[0]
-				var query = "insert into test.events (streamer_id, active, ante_min, ante_max, name, game, closed, general) values ($1, false, 0, 1000, 'General Betting', 'Game', false, true)"
+				var query = "insert into test.events (streamer_id, active, ante_min, ante_max, name, game, closed, general, players) values ($1, false, 0, 1000, 'General Betting', 'Game', false, true, ARRAY[]::json[])"
 				client.query(query, [user.id], function(err, result){
 					done();
 					if(err){

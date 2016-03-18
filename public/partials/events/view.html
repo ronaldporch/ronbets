@@ -1,13 +1,14 @@
 <div class="container" ng-hide="editing">
 	<div class="col-sm-7">
-		<h2>{{event.name}} <button ng-model="editing" ng-click="editing = !editing" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-edit"></span></button></h2>
+		<h2>{{event.name}} <button ng-model="editing" ng-click="editing = !editing" class="btn btn-default btn-xs" ng-show="user.id == event.streamer_id"><span class="glyphicon glyphicon-edit"></span></button></h2>
 		<h4>hosted by {{event.username}} <sup ng-if="event.streamer_id == user.id" title="You are the organizer of this event."><span class="glyphicon glyphicon-tag"></span></sup></h4>
 		<hr>
 		<h4 ng-show="entry">You are participating in this event with an ante of {{entry.ante}}.</h4>
-		<h5><span class="glyphicon glyphicon-calendar"> </span> {{event.date|date:'medium'}}</h5>
-		{{event.ante_min|toNum}}
-		{{event.ante_max|toNum}}
-		{{ante}}
+		<h5 ng-hide="event.general"><span class="glyphicon glyphicon-calendar"> </span> {{event.date|date:'medium'}}</h5>
+		<h5>Minimum Ante: {{event.ante_min}}</h5>
+		<h5>Maximum Ante: {{event.ante_max}}</h5>
+		<hr>
+		{{event.description}}
 	</div>
 	<div class="col-sm-5">
 		<h3>Event Options</h3>
@@ -22,7 +23,7 @@
 			<button ng-click="showForm()" ng-if="user && !entry" class="btn btn-primary"><span ng-show="isJoining">Cancel </span>Join Event</button>
 			<button ng-show="entry" ng-click="cancelEntry()" class="btn btn-danger">Cancel Entry</button>
 		</div>
-		<div ng-show="event.streamer_id == user.id">
+		<div ng-show="event.streamer_id == user.id && !event.general">
 			<button ng-hide="event.active" class="btn btn-primary" ng-click="startEvent()">Start Event</button>
 			<button ng-show="event.active" class="btn btn-danger" ng-click="endEvent()">End Event</button>
 		</div>
@@ -31,6 +32,14 @@
 <div class="container" ng-show="editing">
 	<div ng-include src="'partials/events/event-form.html'"></div>
 </div>
-<pre>
+<pre ng-show="false">
 {{event|json}}
 </pre>
+<style type="text/css">
+	* {
+		color:white;
+	}
+	button .glyphicon {
+		color: black;
+	}
+</style>

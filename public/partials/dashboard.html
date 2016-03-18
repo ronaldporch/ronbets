@@ -1,20 +1,27 @@
 <div class="container">
-	<div class="row">
-		<div class="col-md-10">
-			<h1>Your Events</h1>
-			<hr>
-			<div class="col-md-7">
-				<ul class="list-group">
-					<li ng-repeat="event in events" class="list-group-item" ng-class="{'list-group-item-success':event.active}">
-						<h4 class="list-group-item-heading"><a href="/#/events/{{event.id}}">{{event.name}}</a></h4>
-						<p class="list-group-item-text">{{event.game}}</p>
-						<p class="list-group-item-text">{{event.date | date:'medium'}}</p>
-					</li>
-				</ul>
-			</div>
-			<div class="col-md-5">
-				<a href="/#/events/new" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-plus"> </span> Create New Event</a>
-			</div>
-		</div>
-	</div>
+  <div class="row">
+    <div class="col-md-10">
+      <h1>Your Events</h1>
+      <hr>
+      <div class="col-md-6">
+        <ul class="list-group">
+          <li ng-repeat="event in events | filter:{general:true}" class="list-group-item" ng-class="{'list-group-item-success':event.active}">
+            <h4 class="list-group-item-heading"><a href="/#/events/{{event.id}}">{{event.name}} <small ng-show="event.general"class="glyphicon glyphicon-certificate"></small></a></h4>
+            <p class="list-group-item-text">{{event.game}}</p>
+            <p class="list-group-item-text" ng-hide="event.general">{{event.date | date:'medium'}}</p>
+          </li>
+        </ul>
+        <ul class="list-group">
+          <li ng-repeat="event in events | filter:{general:false}" class="list-group-item" ng-class="{'list-group-item-success':event.active}">
+            <h4 class="list-group-item-heading"><a href="/#/events/{{event.id}}">{{event.name}} <small ng-show="event.general"class="glyphicon glyphicon-certificate"></small></a></h4>
+            <p class="list-group-item-text">{{event.game}}</p>
+            <p class="list-group-item-text" ng-hide="event.general">{{event.date | date:'medium'}}</p>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-5">
+        <a href="/#/events/new" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-plus"> </span> Create New Event</a>
+      </div>
+    </div>
+  </div>
 </div>

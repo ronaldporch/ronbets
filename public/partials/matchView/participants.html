@@ -2,13 +2,16 @@
 	<div class="col-md-12">
 		<table class="table table-bordered">
 		  <tr class="text-center">
-		    <th>User</th>
-		    <th>Money</th>
+		    <th>Participant</th>
+		    <th>Ante</th>
 		  </tr>
 		  <tr ng-repeat="participant in participants">
 		    <td><img src="http://www.gravatar.com/avatar/{{participant.email | gravatar}}" width="35px" height="35px" style="border-radius: 3px;" title="{{bets.username}}"> {{participant.username}}</td>
-		    <td ng-hide="event.id != 0">{{participant.wallet}}</td>
-		    <td ng-show="event.id != 0">{{participant.ante}}</td>
+		    <td>{{participant.ante}} 
+		    	<sup ng-show="participant.recharged">
+		    		<span class="glyphicon glyphicon-credit-card" title="{{participant.username}} Recharged"></span>
+				</sup>
+			</td>
 		  </tr>
 		</table>
 	</div>
